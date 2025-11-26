@@ -1,0 +1,108 @@
+############################
+# PYTHON
+############################
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# PyInstaller
+*.spec
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local settings / keys
+*.local
+*.cfg
+*.ini
+secrets.json
+
+############################
+# FLUTTER / DART
+############################
+
+# Flutter build outputs
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.dart_tool/
+.flutter-plugins
+
+# Generated files
+.generated/
+pubspec.lock
+.meliorate/
+
+# iOS
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Podfile.lock
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.podspec
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+android/key.properties
+*.keystore
+*.jks
+
+# Web
+lib/generated_plugin_registrant.dart
+
+############################
+# FIREBASE
+############################
+
+# Firebase config files (si no quieres subirlos al repositorio)
+# ⚠️ Comenta estas líneas si sí quieres versionarlos
+google-services.json
+GoogleService-Info.plist
+firebase.json
+.firebase/
+
+# Emulator data
+firebase/emulators/
+.firebase/
+
+# Hosting cache
+.firebase/
+firebase-debug.log
+
+############################
+# GENERAL
+############################
+
+# OS / Editor crap
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+.history/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
