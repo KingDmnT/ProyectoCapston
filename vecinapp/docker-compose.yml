@@ -1,0 +1,32 @@
+services:
+  # Servicio de Backend Vecinapp (FastAPI)
+  backend:
+    build: ./backend
+    container_name: vecinapp_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  
+      # Montamos las credenciales de Firebase de forma segura 
+      - ./credentials:/app/credentials
+    env_file:
+      - .env
+    networks:
+      - vecinapp_network
+
+  # Servicio de Backoffice (Flutter Web)
+  # NOTA: En desarrollo, a veces es mejor correr flutter run -d chrome localmente.
+  # Usa este contenedor para simular producción o despliegue.
+  backoffice:
+    build: ./admin-web
+    container_name: vecinapp_backoffice
+    ports:
+      - "3000:80" # Accede en http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - vecinapp_network
+
+networks:
+  vecinapp_network:
+    driver: bridge
