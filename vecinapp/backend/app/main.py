@@ -6,6 +6,7 @@ from app.core.firebase import initialize_firebase
 from app.api import residents
 from app.api import auth
 from app.api import communities
+from app.api import units
 
 app = FastAPI(
     title="Condominio System API",
@@ -42,6 +43,9 @@ app.include_router(residents.router, prefix="/residents", tags=["Residents"])
 
 # Módulo de Comunidades
 app.include_router(communities.router, prefix="/communities", tags=["Communities"])
+
+# Módulo de Unidades
+app.include_router(units.router, prefix="/units", tags=["Units"])
 
 # Módulo de Autenticación
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
