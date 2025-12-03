@@ -1,3 +1,5 @@
+.agent/
+
 ############################
 # PYTHON
 ############################
@@ -31,6 +33,7 @@ dist/
 *.cfg
 *.ini
 secrets.json
+credentials/
 
 ############################
 # FLUTTER / DART
@@ -50,24 +53,24 @@ pubspec.lock
 .meliorate/
 
 # iOS
-ios/Flutter/Flutter.framework
-ios/Flutter/Flutter.podspec
-ios/Podfile.lock
-ios/Pods/
-ios/.symlinks/
-ios/Flutter/App.framework
-ios/Flutter/Flutter.podspec
+vecinapp/ios/Flutter/Flutter.framework
+vecinapp/ios/Flutter/Flutter.podspec
+vecinapp/ios/Podfile.lock
+vecinapp/ios/Pods/
+vecinapp/ios/.symlinks/
+vecinapp/ios/Flutter/App.framework
+vecinapp/ios/Flutter/Flutter.podspec
 
 # Android
-android/.gradle/
-android/app/build/
-android/local.properties
-android/key.properties
+vecinapp/android/.gradle/
+vecinapp/android/app/build/
+vecinapp/android/local.properties
+vecinapp/android/key.properties
 *.keystore
 *.jks
 
 # Web
-lib/generated_plugin_registrant.dart
+vecinapp/lib/generated_plugin_registrant.dart
 
 ############################
 # FIREBASE
