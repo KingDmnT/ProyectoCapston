@@ -7,6 +7,7 @@ from app.api import residents
 from app.api import auth
 from app.api import communities
 from app.api import units
+from app.api import users
 
 app = FastAPI(
     title="Condominio System API",
@@ -46,6 +47,9 @@ app.include_router(communities.router, prefix="/communities", tags=["Communities
 
 # Módulo de Unidades
 app.include_router(units.router, prefix="/units", tags=["Units"])
+
+# Módulo de Usuarios
+app.include_router(users.router, prefix="/users", tags=["Users"])
 
 # Módulo de Autenticación
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])

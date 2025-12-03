@@ -66,7 +66,7 @@ class UserBase(BaseModel):
     vehicles: List[Vehicle] = []
     
 class UserCreate(UserBase):
-    pass
+    password: str # Necesario para crear la cuenta en Auth
 
 class User(UserBase):
     id: str # Firebase UID (o generado para visitas sin cuenta)
