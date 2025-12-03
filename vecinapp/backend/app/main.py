@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Importamos nuestros módulos locales
-# Estos imports asumen que ya creaste los archivos en core/ y api/
 from app.core.firebase import initialize_firebase
 from app.api import residents
+from app.api import auth
 
 app = FastAPI(
     title="Condominio System API",
@@ -41,6 +41,9 @@ async def startup_event():
 # Aquí "pegamos" las rutas de los residentes a la app principal.
 # Todas las rutas definidas en residents.py tendrán el prefijo /residents
 app.include_router(residents.router, prefix="/residents", tags=["Residents"])
+
+# Importamos y registramos el router de autenticación
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # --- Endpoint de prueba (Health Check) ---
 @app.get("/")
