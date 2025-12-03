@@ -1,27 +1,25 @@
-# Usamos una imagen ligera de Python
-FROM python:3.11-slim
+# Etapa 1: Construcción
+FROM python:3.12-slim
 
-# Evita que Python genere archivos .pyc y fuerza logs a la consola
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Instalamos dependencias del sistema necesarias
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Instalar dependencias del sistema (si son necesarias)
+# RUN apt-get update && apt-get install -y gcc
 
-# Copiamos requirements e instalamos las dependencias
+# Copiar archivos de dependencias
 COPY requirements.txt .
+
+# Instalar dependencias de Python
+# Agregamos --no-cache-dir para mantener la imagen ligera
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos el código fuente
+# Copiar el código de la aplicación
 COPY . .
 
-# Exponemos el puerto
+# Exponer el puerto
 EXPOSE 8000
 
-# Comando para correr la app con Uvicorn
-# QUITAR RELOAD
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Comando para ejecutar la aplicación
+# Usamos --host 0.0.0.0 para que sea accesible desde fuera del contenedor
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

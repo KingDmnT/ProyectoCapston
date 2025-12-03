@@ -1,27 +1,33 @@
+version: '3.8'
+
 services:
-  # Servicio de Backend Vecinapp (FastAPI)
+  # Servicio Backend (FastAPI)
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: vecinapp_backend
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app  
-      # Montamos las credenciales de Firebase de forma segura 
+      # Montamos las credenciales para que el contenedor tenga acceso
       - ./credentials:/app/credentials
-    env_file:
-      - .env
+    environment:
+      # Configuramos la ruta de credenciales para Docker
+      - FIREBASE_CREDENTIALS_PATH=/app/credentials/serviceAccountKey.json
+      # Pasamos variables de entorno necesarias (puedes agregar más aquí o usar env_file)
+      - FIREBASE_SERVICE_ACCOUNT_KEY=/app/credentials/serviceAccountKey.json
     networks:
       - vecinapp_network
 
-  # Servicio de Backoffice (Flutter Web)
-  # NOTA: En desarrollo, a veces es mejor correr flutter run -d chrome localmente.
-  # Usa este contenedor para simular producción o despliegue.
-  backoffice:
-    build: ./admin-web
-    container_name: vecinapp_backoffice
+  # Servicio Frontend (Flutter Web)
+  admin_web:
+    build:
+      context: ./admin_web
+      dockerfile: Dockerfile
+    container_name: vecinapp_admin_web
     ports:
-      - "3000:80" # Accede en http://localhost:3000
+      - "3000:80" # Mapeamos puerto 3000 del host al 80 del contenedor
     depends_on:
       - backend
     networks:
