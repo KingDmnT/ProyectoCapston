@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.firebase import initialize_firebase
 from app.api import residents
 from app.api import auth
+from app.api import communities
 
 app = FastAPI(
     title="Condominio System API",
@@ -38,6 +39,9 @@ async def startup_event():
 # --- Rutas ---
 # Módulo de Residentes
 app.include_router(residents.router, prefix="/residents", tags=["Residents"])
+
+# Módulo de Comunidades
+app.include_router(communities.router, prefix="/communities", tags=["Communities"])
 
 # Módulo de Autenticación
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
