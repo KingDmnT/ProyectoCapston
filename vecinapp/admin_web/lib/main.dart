@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
-// --- CONFIGURACIÓN ---
-// Los valores se cargan desde el archivo .env en assets
+// --- Configuración ---
+// Carga de credenciales desde archivo .env (Assets)
 final firebaseOptions = FirebaseOptions(
   apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '',
   appId: dotenv.env['FIREBASE_APP_ID'] ?? '',
@@ -22,15 +22,14 @@ final String backendUrl = dotenv.env['BACKEND_URL'] ?? "http://127.0.0.1:8000";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Cargar variables de entorno
+  // 1. Cargar variables de entorno
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     print("Error cargando .env: $e");
-    print("Asegúrate de crear el archivo .env en admin_web/ basado en .env.example");
   }
   
-  // Inicializar Firebase
+  // 2. Inicializar Firebase
   try {
     await Firebase.initializeApp(
       options: firebaseOptions,

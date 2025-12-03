@@ -3,13 +3,18 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import auth
 from app.core.firebase import initialize_firebase
 
-# Esquema de seguridad Bearer Token
+# Esquema de seguridad: Bearer Token
 security = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
-    Verifica el token ID de Firebase enviado en el header Authorization.
-    Retorna el diccionario decodificado del token (uid, email, etc.) si es válido.
+    Valida el token de Firebase (JWT) recibido en el encabezado Authorization.
+    
+    Retorna:
+        dict: Payload del token decodificado (uid, email, etc.) si es válido.
+    
+    Lanza:
+        HTTPException: Si el token es inválido, expirado o malformado.
     """
     token = credentials.credentials
     try:

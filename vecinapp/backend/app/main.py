@@ -12,13 +12,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --- CONFIGURACIÓN CORS (CRÍTICO) ---
-# Esto permite que tu Flutter Web (puerto 3000) pueda hablar con este Backend (puerto 8000)
-# Si no configuras esto, el navegador bloqueará las peticiones.
+# --- Configuración de CORS ---
+# Permite la comunicación entre el frontend (Flutter Web) y este backend.
+# En producción, se debe restringir 'origins' a los dominios específicos.
 origins = [
     "http://localhost",
-    "http://localhost:3000", # Puerto del Docker del backoffice
-    "*"                      # Permitir todo (útil para desarrollo rápido)
+    "http://localhost:3000", 
+    "*"                      
 ]
 
 app.add_middleware(
@@ -29,23 +29,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Eventos de Ciclo de Vida ---
-# Este evento se dispara automáticamente cuando FastAPI inicia.
-# Aquí conectamos con Firebase usando las credenciales.
+# --- Inicialización ---
 @app.on_event("startup")
 async def startup_event():
     print("🚀 Iniciando servidor...")
     initialize_firebase()
 
-# --- Registro de Rutas (Routers) ---
-# Aquí "pegamos" las rutas de los residentes a la app principal.
-# Todas las rutas definidas en residents.py tendrán el prefijo /residents
+# --- Rutas ---
+# Módulo de Residentes
 app.include_router(residents.router, prefix="/residents", tags=["Residents"])
 
-# Importamos y registramos el router de autenticación
+# Módulo de Autenticación
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
-# --- Endpoint de prueba (Health Check) ---
+# --- Health Check ---
 @app.get("/")
 async def root():
     return {
