@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:convert';
+import 'package:admin_web/theme/app_theme.dart';
+import 'package:admin_web/screens/home_screen.dart';
 
 // --- Configuración ---
 // Carga de credenciales desde archivo .env (Assets)
@@ -48,14 +48,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'VecinApp Admin',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB), // Azul moderno
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.interTextTheme(),
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme, // Usamos nuestro tema personalizado
       home: const LoginPage(),
     );
   }
@@ -98,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
         
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DashboardPage()),
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         }
       }
@@ -144,118 +138,101 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundLight,
       body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Icon(Icons.admin_panel_settings, size: 64, color: Color(0xFF2563EB)),
-              const SizedBox(height: 32),
-              Text(
-                'Bienvenido',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Inicia sesión para administrar tu comunidad',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Correo Electrónico',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 420),
+            padding: const EdgeInsets.all(48),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo / Icono
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.security, size: 64, color: AppTheme.primaryColor),
                   ),
                 ),
-              FilledButton(
-                onPressed: _isLoading ? null : _login,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                const SizedBox(height: 32),
+                
+                Text(
+                  'VecinApp Admin',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Iniciar Sesión'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              }
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              '¡Has ingresado correctamente!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                const SizedBox(height: 8),
+                Text(
+                  'Panel de Administración',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 48),
+                
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Correo Electrónico',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  obscureText: true,
+                ),
+                
+                const SizedBox(height: 32),
+                
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red[800]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  
+                FilledButton(
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('INGRESAR'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text('Usuario: ${user?.email}'),
-            Text('UID: ${user?.uid}'),
-          ],
+          ),
         ),
       ),
     );
