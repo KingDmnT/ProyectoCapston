@@ -42,4 +42,29 @@ class CommunityService {
       throw Exception('Error al crear comunidad: ${response.body}');
     }
   }
+
+  Future<Community> updateCommunity(Community community) async {
+    final response = await http.put(
+      Uri.parse('$_baseUrl/communities/${community.id}'),
+      headers: await _getHeaders(),
+      body: json.encode(community.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return Community.fromJson(json.decode(utf8.decode(response.bodyBytes)));
+    } else {
+      throw Exception('Error al actualizar comunidad: ${response.body}');
+    }
+  }
+
+  Future<void> deleteCommunity(String id) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/communities/$id'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al eliminar comunidad: ${response.body}');
+    }
+  }
 }
