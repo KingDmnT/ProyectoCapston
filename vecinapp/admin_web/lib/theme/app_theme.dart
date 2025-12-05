@@ -31,15 +31,12 @@ class AppTheme {
         displayColor: textDark,
       ),
       
-      // Estilo de Tarjetas (Glassmorphism sutil / Moderno)
-      cardTheme: CardTheme(
-        color: surfaceWhite,
-        elevation: 2,
-        shadowColor: primaryColor.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16), // Bordes redondeados modernos
-        ),
-      ),
+      // Estilo de Tarjetas - Comentado temporalmente por error de tipos en esta versión de Flutter
+      // cardTheme: const CardTheme(
+      //   color: surfaceWhite,
+      //   elevation: 2,
+      //   margin: EdgeInsets.zero,
+      // ),
       
       // Estilo de Botones
       filledButtonTheme: FilledButtonThemeData(
