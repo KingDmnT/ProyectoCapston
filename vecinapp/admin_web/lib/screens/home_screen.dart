@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:admin_web/theme/app_theme.dart';
 
 import 'package:admin_web/screens/communities/communities_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:admin_web/main.dart'; // Para LoginPage
+import 'package:admin_web/screens/login_page.dart'; // Para LoginPage
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
