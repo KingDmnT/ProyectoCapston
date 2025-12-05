@@ -1,10 +1,10 @@
 # Etapa 1: Construcción
-FROM ghcr.io/cirruslabs/flutter:stable AS build
+FROM instrumentisto/flutter:3.19 AS build
 
 WORKDIR /app
 
 # Copiar archivos de configuración de dependencias
-COPY pubspec.yaml pubspec.lock ./
+COPY pubspec.yaml ./
 
 # Obtener dependencias
 RUN flutter pub get

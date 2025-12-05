@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   # Servicio Backend (FastAPI)
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: vecinapp_backend
