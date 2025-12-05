@@ -16,7 +16,10 @@ def initialize_firebase():
             if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
                 cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
                 firebase_admin.initialize_app(cred)
-                db = firestore.client()
+                # db = firestore.client(database='vecinappdb')
+                # Usamos el cliente directo de Google Cloud para especificar la base de datos
+                from google.cloud import firestore as google_firestore
+                db = google_firestore.Client(credentials=cred.get_credential(), project=cred.project_id, database='vecinappdb')
                 print(f"✅ Firebase conectado usando: {settings.FIREBASE_CREDENTIALS_PATH}")
             else:
                 print(f"⚠️ ERROR CRÍTICO: No se encontró el archivo de credenciales en {settings.FIREBASE_CREDENTIALS_PATH}")
@@ -24,7 +27,11 @@ def initialize_firebase():
         except Exception as e:
             print(f"❌ Error inicializando Firebase: {e}")
     else:
-        db = firestore.client()
+        # db = firestore.client(database='vecinappdb')
+        from google.cloud import firestore as google_firestore
+        app = firebase_admin.get_app()
+        cred = app.credential
+        db = google_firestore.Client(credentials=cred.get_credential(), project=cred.project_id, database='vecinappdb')
 
 def get_db():
     if db is None:

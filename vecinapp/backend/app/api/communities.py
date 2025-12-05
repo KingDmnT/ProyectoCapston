@@ -43,3 +43,28 @@ def get_community(
             detail="Comunidad no encontrada"
         )
     return community
+
+@router.put("/{community_id}", response_model=Community)
+def update_community(
+    community_id: str, 
+    community_in: CommunityCreate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Actualiza una comunidad. Requiere permisos de Super Admin (TODO)"""
+    update_data = community_in.model_dump(exclude_unset=True)
+    
+    updated_community = repo.update(community_id, update_data)
+    if not updated_community:
+        raise HTTPException(status_code=404, detail="Community not found")
+    return updated_community
+
+@router.delete("/{community_id}")
+def delete_community(
+    community_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Desactiva una comunidad (Soft Delete)"""
+    success = repo.delete(community_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Community not found")
+    return {"message": "Community deactivated successfully"}

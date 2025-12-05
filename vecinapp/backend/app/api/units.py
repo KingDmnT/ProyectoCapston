@@ -50,3 +50,34 @@ def get_unit(
             detail="Unidad no encontrada"
         )
     return unit
+
+@router.put("/{unit_id}", response_model=Unit)
+def update_unit(
+    unit_id: str, 
+    unit_in: UnitCreate, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Actualiza una unidad."""
+    update_data = unit_in.model_dump(exclude_unset=True)
+    
+    # Manejo de Enums si vienen en el update
+    if 'type' in update_data:
+        update_data['type'] = update_data['type'].value
+    if 'status' in update_data:
+        update_data['status'] = update_data['status'].value
+
+    updated_unit = repo.update(unit_id, update_data)
+    if not updated_unit:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    return updated_unit
+
+@router.delete("/{unit_id}")
+def delete_unit(
+    unit_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Elimina una unidad."""
+    success = repo.delete(unit_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Unit not found")
+    return {"message": "Unit deleted successfully"}

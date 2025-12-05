@@ -16,9 +16,18 @@ class CommunityRepository:
         # Convertimos el modelo Pydantic a diccionario
         community_data = community.model_dump()
         
+        # FIX: Firestore no soporta datetime.date, convertimos a datetime
+        from datetime import datetime, date
+        if community_data.get('fecha_entrega_inicial') and isinstance(community_data['fecha_entrega_inicial'], date):
+             # Convertir a datetime a medianoche
+             d = community_data['fecha_entrega_inicial']
+             community_data['fecha_entrega_inicial'] = datetime(d.year, d.month, d.day)
+
         # Agregamos metadatos del sistema
         community_data['id'] = doc_ref.id
-        community_data['created_at'] = firestore.SERVER_TIMESTAMP
+        # Usamos datetime.now() para que sea compatible con Pydantic inmediatamente
+        now = datetime.now()
+        community_data['created_at'] = now
         community_data['is_active'] = True
         
         # Guardamos en BD
@@ -38,3 +47,36 @@ class CommunityRepository:
         if doc.exists:
             return Community(**doc.to_dict())
         return None
+
+    def update(self, community_id: str, community_update: dict) -> Optional[Community]:
+        """Actualiza una comunidad existente"""
+        doc_ref = self.collection.document(community_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return None
+            
+        # FIX: Firestore no soporta datetime.date, convertimos a datetime
+        from datetime import datetime, date
+        if community_update.get('fecha_entrega_inicial') and isinstance(community_update['fecha_entrega_inicial'], date):
+             # Convertir a datetime a medianoche
+             d = community_update['fecha_entrega_inicial']
+             community_update['fecha_entrega_inicial'] = datetime(d.year, d.month, d.day)
+
+        # Actualizamos solo los campos proporcionados
+        doc_ref.update(community_update)
+        
+        # Obtenemos el documento actualizado
+        updated_doc = doc_ref.get()
+        return Community(**updated_doc.to_dict())
+
+    def delete(self, community_id: str) -> bool:
+        """Desactiva (soft delete) una comunidad"""
+        doc_ref = self.collection.document(community_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return False
+            
+        doc_ref.update({'is_active': False})
+        return True
