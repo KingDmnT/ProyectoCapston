@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/admin/screens/communities/communities_screen.dart';
+import 'package:vecinapp/admin/screens/users/users_screen.dart';
 
 // Dashboard principal del administrador (backoffice web)
 class AdminDashboardPage extends StatefulWidget {
@@ -19,7 +20,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final List<Widget> _views = [
     const _DashboardView(),
     const CommunitiesScreen(),
-    const Center(child: Text("Gestión de Usuarios (Próximamente)")),
+    const UsersScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
   ];
   
