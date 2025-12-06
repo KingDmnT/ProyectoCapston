@@ -38,14 +38,26 @@ class CommunityMembership {
   });
 
   factory CommunityMembership.fromJson(Map<String, dynamic> json) {
+    // Helper para convertir Timestamp de Firestore o String a DateTime
+    DateTime? parseDate(dynamic value) {
+      if (value == null) return null;
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      // Firestore Timestamp tiene toDate()
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        return (value as dynamic).toDate();
+      }
+      return null;
+    }
+
     return CommunityMembership(
       communityId: json['community_id'] ?? '',
       communityName: json['community_name'],
       unitId: json['unit_id'],
       unitNumber: json['unit_number'],
       roles: (json['roles'] as List<dynamic>?)?.cast<String>() ?? [],
-      startDate: json['start_date'] != null ? DateTime.parse(json['start_date']) : null,
-      endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+      startDate: parseDate(json['start_date']),
+      endDate: parseDate(json['end_date']),
       isActive: json['is_active'] ?? true,
     );
   }
