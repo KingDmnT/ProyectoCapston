@@ -68,7 +68,7 @@ def update_unit(
 
     updated_unit = repo.update(unit_id, update_data)
     if not updated_unit:
-        raise HTTPException(status_code=404, detail="Unit not found")
+        raise HTTPException(status_code=404, detail="Unidad no encontrada")
     return updated_unit
 
 @router.delete("/{unit_id}")
@@ -79,5 +79,5 @@ def delete_unit(
     """Elimina una unidad."""
     success = repo.delete(unit_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Unit not found")
-    return {"message": "Unit deleted successfully"}
+        raise HTTPException(status_code=404, detail="Unidad no encontrada")
+    return {"message": "Unidad eliminada exitosamente"}
