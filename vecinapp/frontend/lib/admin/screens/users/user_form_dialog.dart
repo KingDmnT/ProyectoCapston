@@ -352,7 +352,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                         items: _units.map((unit) {
                           return DropdownMenuItem(
                             value: unit,
-                            child: Text('Unidad ${unit.unitNumber}'),
+                            child: Text('Unidad ${unit.name}'),
                           );
                         }).toList(),
                         onChanged: (unit) {
