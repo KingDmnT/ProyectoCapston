@@ -18,14 +18,14 @@ services:
     networks:
       - vecinapp_network
 
-  # Servicio Frontend (Flutter Web)
-  admin_web:
+  # Servicio Frontend Unificado (Flutter Web - Admin + Mobile)
+  frontend:
     build:
-      context: ./admin_web
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: vecinapp_admin_web
+    container_name: vecinapp_frontend
     ports:
-      - "3000:80" # Mapeamos puerto 3000 del host al 80 del contenedor
+      - "3000:80" # Backoffice web
     depends_on:
       - backend
     networks:
