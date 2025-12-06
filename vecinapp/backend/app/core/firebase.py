@@ -16,22 +16,27 @@ def initialize_firebase():
             if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
                 cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
                 firebase_admin.initialize_app(cred)
-                # db = firestore.client(database='vecinappdb')
-                # Usamos el cliente directo de Google Cloud para especificar la base de datos
+                # Usar cliente directo de Google Cloud para DB predeterminada
                 from google.cloud import firestore as google_firestore
-                db = google_firestore.Client(credentials=cred.get_credential(), project=cred.project_id, database='vecinappdb')
-                print(f"✅ Firebase conectado usando: {settings.FIREBASE_CREDENTIALS_PATH}")
+                db = google_firestore.Client(
+                    credentials=cred.get_credential(), 
+                    project=cred.project_id
+                )
+                print(f"✅ Firebase conectado a DB predeterminada usando: {settings.FIREBASE_CREDENTIALS_PATH}")
             else:
                 print(f"⚠️ ERROR CRÍTICO: No se encontró el archivo de credenciales en {settings.FIREBASE_CREDENTIALS_PATH}")
                 print("   Asegúrate de haber puesto serviceAccountKey.json en la carpeta 'credentials' y reiniciado Docker.")
         except Exception as e:
             print(f"❌ Error inicializando Firebase: {e}")
     else:
-        # db = firestore.client(database='vecinappdb')
+        # Si ya está inicializado, obtener cliente de DB predeterminada
         from google.cloud import firestore as google_firestore
         app = firebase_admin.get_app()
         cred = app.credential
-        db = google_firestore.Client(credentials=cred.get_credential(), project=cred.project_id, database='vecinappdb')
+        db = google_firestore.Client(
+            credentials=cred.get_credential(), 
+            project=cred.project_id
+        )
 
 def get_db():
     if db is None:
