@@ -55,7 +55,7 @@ def update_community(
     
     updated_community = repo.update(community_id, update_data)
     if not updated_community:
-        raise HTTPException(status_code=404, detail="Community not found")
+        raise HTTPException(status_code=404, detail="Comunidad no encontrada")
     return updated_community
 
 @router.delete("/{community_id}")
@@ -66,5 +66,5 @@ def delete_community(
     """Desactiva una comunidad (Soft Delete)"""
     success = repo.delete(community_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Community not found")
-    return {"message": "Community deactivated successfully"}
+        raise HTTPException(status_code=404, detail="Comunidad no encontrada")
+    return {"message": "Comunidad desactivada exitosamente"}
