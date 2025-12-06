@@ -38,15 +38,39 @@ class CommunityMembership {
   });
 
   factory CommunityMembership.fromJson(Map<String, dynamic> json) {
-    // Helper para convertir Timestamp de Firestore o String a DateTime
+    // Helper para convertir diferentes formatos de fecha
     DateTime? parseDate(dynamic value) {
       if (value == null) return null;
+      
+      // Si ya es DateTime
       if (value is DateTime) return value;
-      if (value is String) return DateTime.parse(value);
-      // Firestore Timestamp tiene toDate()
-      if (value.runtimeType.toString().contains('Timestamp')) {
-        return (value as dynamic).toDate();
+      
+      // Si es String ISO
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          print('Error parseando fecha string: $e');
+          return null;
+        }
       }
+      
+      // Si tiene método toDate (Firestore Timestamp)
+      try {
+        return value.toDate();
+      } catch (e) {
+        // Ignorar si no tiene toDate
+      }
+      
+      // Si es Map con seconds (formato raw de Firestore)
+      if (value is Map) {
+        if (value.containsKey('seconds')) {
+          return DateTime.fromMillisecondsSinceEpoch(
+            (value['seconds'] as int) * 1000,
+          );
+        }
+      }
+      
       return null;
     }
 
