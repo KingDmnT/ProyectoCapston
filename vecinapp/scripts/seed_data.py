@@ -27,6 +27,57 @@ db = google_firestore.Client(
     project=cred.project_id
 )
 
+# === FUNCIÓN DE LIMPIEZA ===
+def cleanup_data():
+    """
+    Elimina todos los datos de Firestore y usuarios de Auth.
+    ⚠️ CUIDADO: Esta función borra TODOS los datos.
+    """
+    print("\n🧹 LIMPIANDO DATOS EXISTENTES...")
+    
+    # 1. Eliminar usuarios de Firebase Auth
+    print("🗑️  Eliminando usuarios de Authentication...")
+    try:
+        users = auth.list_users().users
+        for user in users:
+            auth.delete_user(user.uid)
+            print(f"   ✓ Usuario eliminado: {user.email}")
+    except Exception as e:
+        print(f"   ⚠️  Error eliminando usuarios: {e}")
+    
+    # 2. Eliminar colección 'users'
+    print("🗑️  Eliminando colección 'users'...")
+    try:
+        users_ref = db.collection('users')
+        docs = users_ref.stream()
+        deleted = 0
+        for doc in docs:
+            doc.reference.delete()
+            deleted += 1
+        print(f"   ✓ {deleted} documentos eliminados de 'users'")
+    except Exception as e:
+        print(f"   ⚠️  Error: {e}")
+    
+    # 3. Eliminar colección 'communities' (incluyendo subcollections)
+    print("🗑️  Eliminando colección 'communities'...")
+    try:
+        communities_ref = db.collection('communities')
+        docs = communities_ref.stream()
+        deleted = 0
+        for doc in docs:
+            # Eliminar subcollection 'units'
+            units_ref = doc.reference.collection('units')
+            for unit in units_ref.stream():
+                unit.reference.delete()
+            # Eliminar documento de comunidad
+            doc.reference.delete()
+            deleted += 1
+        print(f"   ✓ {deleted} comunidades eliminadas")
+    except Exception as e:
+        print(f"   ⚠️  Error: {e}")
+    
+    print("✅ Limpieza completada\n")
+
 def create_auth_user(email, password, display_name):
     """Crea un usuario en Firebase Auth"""
     try:
@@ -117,6 +168,7 @@ def create_user_profile(uid, first_name, last_name, email, role, community_membe
         "photoUrl": None,
         "communityId": community_memberships[0]['community_id'] if community_memberships else None,
         "memberships": community_memberships,
+        "is_active": True,
         "created_at": datetime.now()
     }
     
@@ -130,6 +182,9 @@ def seed_complete_data():
     print("\n" + "="*60)
     print("🌱 POBLAMIENTO COMPLETO DE FIREBASE")
     print("="*60 + "\n")
+    
+    # LIMPIAR DATOS EXISTENTES
+    cleanup_data()
     
     # ========================================
     # 1. CREAR COMUNIDADES CON UNIDADES
