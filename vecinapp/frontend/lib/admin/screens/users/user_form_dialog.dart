@@ -79,7 +79,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
 
   Future<void> _loadUnits(String communityId) async {
     try {
-      final units = await _unitService.getUnits(communityId: communityId);
+      final units = await _unitService.getUnits(communityId);
       setState(() {
         _units = units;
         _selectedUnit = null; // Reset selección

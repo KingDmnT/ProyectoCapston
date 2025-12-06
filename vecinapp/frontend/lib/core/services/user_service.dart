@@ -16,26 +16,32 @@ class UserService {
     if (role != null) queryParams['role'] = role;
     if (isActive != null) queryParams['is_active'] = isActive.toString();
 
-    final response = await _apiService.get(
-      '/users',
-      queryParameters: queryParams,
-    );
+    try {
+      final response = await _apiService.get(
+        '/users',
+        queryParameters: queryParams,
+      );
 
-    if (response['success']) {
-      final List<dynamic> data = response['data'] ?? [];
-      return data.map((json) => AppUser.fromJson(json)).toList();
+      // La respuesta es directamente una lista
+      if (response is List) {
+        return response.map((json) => AppUser.fromJson(json)).toList();
+      }
+      throw Exception('Formato de respuesta inesperado');
+    } catch (e) {
+      print('Error en getUsers: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al obtener usuarios');
   }
 
   /// Obtener un usuario por ID
   Future<AppUser> getUserById(String userId) async {
-    final response = await _apiService.get('/users/$userId');
-
-    if (response['success']) {
-      return AppUser.fromJson(response['data']);
+    try {
+      final response = await _apiService.get('/users/$userId');
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en getUserById: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al obtener usuario');
   }
 
   /// Crear un nuevo usuario
@@ -48,20 +54,21 @@ class UserService {
     String? phone,
     String? role,
   }) async {
-    final response = await _apiService.post('/users', data: {
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': email,
-      'password': password,
-      'rut': rut,
-      if (phone != null) 'phone': phone,
-      // Otros campos opcionales según necesidad
-    });
+    try {
+      final response = await _apiService.post('/users', {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'password': password,
+        'rut': rut,
+        if (phone != null) 'phone': phone,
+      });
 
-    if (response['success']) {
-      return AppUser.fromJson(response['data']);
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en createUser: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al crear usuario');
   }
 
   /// Actualizar un usuario existente
@@ -72,26 +79,28 @@ class UserService {
     String? phone,
     String? rut,
   }) async {
-    final data = <String, dynamic>{};
-    if (firstName != null) data['first_name'] = firstName;
-    if (lastName != null) data['last_name'] = lastName;
-    if (phone != null) data['phone'] = phone;
-    if (rut != null) data['rut'] = rut;
+    try {
+      final data = <String, dynamic>{};
+      if (firstName != null) data['first_name'] = firstName;
+      if (lastName != null) data['last_name'] = lastName;
+      if (phone != null) data['phone'] = phone;
+      if (rut != null) data['rut'] = rut;
 
-    final response = await _apiService.put('/users/$userId', data: data);
-
-    if (response['success']) {
-      return AppUser.fromJson(response['data']);
+      final response = await _apiService.put('/users/$userId', data);
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en updateUser: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al actualizar usuario');
   }
 
   /// Eliminar (desactivar) un usuario
   Future<void> deleteUser(String userId) async {
-    final response = await _apiService.delete('/users/$userId');
-
-    if (!response['success']) {
-      throw Exception(response['message'] ?? 'Error al eliminar usuario');
+    try {
+      await _apiService.delete('/users/$userId');
+    } catch (e) {
+      print('Error en deleteUser: $e');
+      rethrow;
     }
   }
 
@@ -102,19 +111,21 @@ class UserService {
     required String unitId,
     List<String> roles = const ['Residente'],
   }) async {
-    final response = await _apiService.post(
-      '/users/$userId/assign-unit',
-      data: {
-        'community_id': communityId,
-        'unit_id': unitId,
-        'roles': roles,
-      },
-    );
+    try {
+      final response = await _apiService.post(
+        '/users/$userId/assign-unit',
+        {
+          'community_id': communityId,
+          'unit_id': unitId,
+          'roles': roles,
+        },
+      );
 
-    if (response['success']) {
-      return AppUser.fromJson(response['data']);
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en assignUserToUnit: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al asignar unidad');
   }
 
   /// Desasignar usuario de una comunidad
@@ -122,13 +133,15 @@ class UserService {
     required String userId,
     required String communityId,
   }) async {
-    final response = await _apiService.delete(
-      '/users/$userId/unassign-unit/$communityId',
-    );
+    try {
+      final response = await _apiService.delete(
+        '/users/$userId/unassign-unit/$communityId',
+      );
 
-    if (response['success']) {
-      return AppUser.fromJson(response['data']);
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en unassignUserFromCommunity: $e');
+      rethrow;
     }
-    throw Exception(response['message'] ?? 'Error al desasignar usuario');
   }
 }
