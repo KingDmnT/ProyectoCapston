@@ -49,7 +49,7 @@ class UserBase(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    rut: str # Obligatorio
+    rut: str # Obligatorio (validación comentada para DEV)
     phone: Optional[str] = None
     
     # Datos para Analítica y Demografía
@@ -72,6 +72,27 @@ class User(UserBase):
     id: str # Firebase UID (o generado para visitas sin cuenta)
     is_active: bool = True
     memberships: List[CommunityMembershipBase] = []
+    photoUrl: Optional[str] = None  # URL de foto de perfil (Firebase Storage cuando esté disponible)
 
     class Config:
         from_attributes = True
+
+# Schema para actualización de usuario
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    rut: Optional[str] = None  # Validación comentada para DEV
+    gender: Optional[Gender] = None
+    birth_date: Optional[date] = None
+    category: Optional[PersonCategory] = None
+    has_disability: Optional[bool] = None
+    disability_details: Optional[str] = None
+    requires_assistance: Optional[bool] = None
+    vehicles: Optional[List[Vehicle]] = None
+
+# Schema para asignación de unidad
+class UserAssignUnit(BaseModel):
+    community_id: str
+    unit_id: str
+    roles: List[UserRole] = [UserRole.RESIDENTE]
