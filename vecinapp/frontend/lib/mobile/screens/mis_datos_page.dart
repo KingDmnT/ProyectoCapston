@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'dart:io'; // Necesario para manejar la foto si viene de archivo
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 // Si tienes tus modelos en carpetas, impórtalos. 
 // Si no, este código funcionará igual con datos simulados.
@@ -52,7 +53,7 @@ class _MisDatosPageState extends State<MisDatosPage> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
               decoration: const BoxDecoration(
-                color: Color(0xFF2F3DBE),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -119,7 +120,7 @@ class _MisDatosPageState extends State<MisDatosPage> {
                           child: (photoPath == null || photoPath!.isEmpty)
                               ? Text(
                                   nombre[0].toUpperCase(),
-                                  style: const TextStyle(fontSize: 40, color: Color(0xFF2F3DBE), fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 40, color: AppColors.primary, fontWeight: FontWeight.bold),
                                 )
                               : null,
                         ),
@@ -128,7 +129,7 @@ class _MisDatosPageState extends State<MisDatosPage> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF43CE88), // Verde
+                          color: AppColors.success, // Verde", "StartLine">132
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2)
                         ),
@@ -242,7 +243,7 @@ class _MisDatosPageState extends State<MisDatosPage> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color(0xFF2F3DBE),
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -299,10 +300,10 @@ class _ProfileInfoTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF2F3DBE).withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: const Color(0xFF2F3DBE), size: 22),
+            child: Icon(icon, color: AppColors.primary, size: 22),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -322,7 +323,7 @@ class _ProfileInfoTile extends StatelessWidget {
                   style: GoogleFonts.lato(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],

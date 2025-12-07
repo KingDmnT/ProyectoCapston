@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 class ReservarEspacioPage extends StatefulWidget {
   final String nombreEspacio; // Ej: "Quincho"
@@ -23,7 +24,6 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
   TimeOfDay _horaFin = const TimeOfDay(hour: 16, minute: 00);
   
   final _comentariosCtrl = TextEditingController();
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
 
   // Selector de Fecha
   Future<void> _seleccionarFecha(BuildContext context) async {
@@ -35,7 +35,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: azulCorporativo),
+            colorScheme: ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -54,7 +54,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: azulCorporativo),
+            colorScheme: ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -99,7 +99,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 25),
               decoration: BoxDecoration(
-                color: azulCorporativo,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -215,7 +215,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
                             controller: _comentariosCtrl,
                             decoration: InputDecoration(
                               labelText: "Comentarios o Invitados (Opcional)",
-                              prefixIcon: Icon(Icons.notes, color: azulCorporativo),
+                              prefixIcon: Icon(Icons.notes, color: AppColors.primary),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -223,7 +223,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: azulCorporativo, width: 2),
+                                borderSide: BorderSide(color: AppColors.primary, width: 2),
                               ),
                             ),
                             maxLines: 2,
@@ -238,7 +238,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
                             child: ElevatedButton(
                               onPressed: _confirmarReserva,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: azulCorporativo,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 2,
@@ -274,7 +274,7 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: azulCorporativo,
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -316,12 +316,12 @@ class _InfoField extends StatelessWidget {
         color: isEditable ? Colors.blue.withOpacity(0.05) : Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isEditable ? const Color(0xFF2F3DBE).withOpacity(0.3) : Colors.transparent,
+          color: isEditable ? AppColors.primary.withOpacity(0.3) : Colors.transparent,
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF2F3DBE), size: 22),
+          Icon(icon, color: AppColors.primary, size: 22),
           const SizedBox(width: 15),
           Expanded(
             child: Column(

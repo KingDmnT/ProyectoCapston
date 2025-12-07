@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 import '../models/app_user.dart';
 import '../services/local_auth.dart';
 // Eliminamos dart:io para que funcione en Web
+// import 'dart:io'; 
 // import 'dart:io'; 
 // import 'package:image_picker/image_picker.dart'; // Opcional si no usamos fotos en web
 
@@ -24,9 +26,6 @@ class _CrearCuentaState extends State<CrearCuenta> {
   // En versión Web Demo, desactivamos la foto real para evitar errores de dart:io
   // File? _photoFile; 
   // final _picker = ImagePicker();
-
-  // Colores corporativos
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
 
   // Método simulado para Web
   Future<void> _pickPhoto() async {
@@ -102,7 +101,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
               height: 220, 
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               decoration: BoxDecoration(
-                color: azulCorporativo,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -150,14 +149,14 @@ class _CrearCuentaState extends State<CrearCuenta> {
                         radius: 50,
                         backgroundColor: Colors.grey[200],
                         // Usamos Icono siempre para evitar crash en Web
-                        child: Icon(Icons.person, size: 50, color: azulCorporativo.withOpacity(0.5)),
+                        child: Icon(Icons.person, size: 50, color: AppColors.primary.withOpacity(0.5)),
                       ),
                     ),
                     Positioned(
                       bottom: 0,
                       right: 0,
                       child: Material(
-                        color: const Color(0xFF43CE88),
+                        color: AppColors.success,", "StartLine">159
                         borderRadius: BorderRadius.circular(20),
                         elevation: 4,
                         child: InkWell(
@@ -270,7 +269,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                         height: 50,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: azulCorporativo,
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 2,
@@ -295,7 +294,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
                   onTap: () => Navigator.pushReplacementNamed(context, '/login'),
                   child: Text(
                     "Inicia sesión aquí",
-                    style: TextStyle(color: azulCorporativo, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -310,7 +309,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: const Color(0xFF2F3DBE)),
+      prefixIcon: Icon(icon, color: AppColors.primary),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -318,7 +317,7 @@ class _CrearCuentaState extends State<CrearCuenta> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF2F3DBE), width: 2),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
     );
@@ -340,10 +339,10 @@ class _RoleCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF2F3DBE) : Colors.grey[100],
+          color: isSelected ? AppColors.primary : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2F3DBE) : Colors.grey.shade300,
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
             width: isSelected ? 2 : 1
           ),
         ),

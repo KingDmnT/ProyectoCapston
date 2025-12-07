@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/mobile/screens/reportar_incidente_page.dart';
 
 class IncidentesMenuPage extends StatefulWidget {
@@ -36,7 +37,7 @@ class _IncidentesMenuPageState extends State<IncidentesMenuPage> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 25),
               decoration: const BoxDecoration(
-                color: Color(0xFF2F3DBE),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -110,7 +111,7 @@ class _IncidentesMenuPageState extends State<IncidentesMenuPage> {
                     label: "Otros",
                     subtitle: "Reportar otro tipo de problema",
                     icon: Icons.report_problem_outlined,
-                    color: const Color(0xFF2F3DBE), 
+                    color: AppColors.primary, 
                     onTap: () => _irAReporte("Otros"),
                   ),
                 ],
@@ -137,7 +138,7 @@ class _IncidentesMenuPageState extends State<IncidentesMenuPage> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color(0xFF2F3DBE),
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -212,7 +213,7 @@ class _IncidenteOptionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+                    Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
                     Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey[500])),
                   ],
