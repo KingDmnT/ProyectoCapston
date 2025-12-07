@@ -2,6 +2,7 @@
 import 'dart:io';                        // [NEW]
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart'; // [NEW]
+import 'package:vecinapp/core/theme/app_theme.dart';
 import '../services/local_auth.dart';
 import '../models/app_user.dart';
 
@@ -75,7 +76,6 @@ class _MisDatosState extends State<MisDatos> {       // [NEW]
 
   @override
   Widget build(BuildContext context) {
-    final azul = const Color(0xFF2F3DBE);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Datos'),
@@ -108,7 +108,7 @@ class _MisDatosState extends State<MisDatos> {       // [NEW]
                       bottom: -2,
                       right: -2,
                       child: Material(
-                        color: azul,
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(20),
                         child: InkWell(
                           onTap: _pickPhoto,

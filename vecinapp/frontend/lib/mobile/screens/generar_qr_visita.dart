@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 class GenerarQrVisitaPage extends StatefulWidget {
   final String tipoVisita;
@@ -26,7 +27,7 @@ class _GenerarQrVisitaPageState extends State<GenerarQrVisitaPage> {
   bool _mostrarFormulario = true;
   int _selectedIndex = 0; 
 
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
+  
 
   void _generarCodigo() {
     if (_nombreCtrl.text.trim().isEmpty || _rutCtrl.text.trim().isEmpty) {
@@ -65,7 +66,7 @@ FECHA: ${DateTime.now().toString().substring(0, 16)}
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
               decoration: BoxDecoration(
-                color: azulCorporativo,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -143,7 +144,7 @@ FECHA: ${DateTime.now().toString().substring(0, 16)}
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: azulCorporativo,
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -194,7 +195,7 @@ FECHA: ${DateTime.now().toString().substring(0, 16)}
               child: ElevatedButton.icon(
                 onPressed: _generarCodigo,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: azulCorporativo,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 2,
@@ -229,7 +230,7 @@ FECHA: ${DateTime.now().toString().substring(0, 16)}
                   data: _qrData ?? "Error",
                   version: QrVersions.auto,
                   size: 250.0,
-                  foregroundColor: azulCorporativo,
+                  foregroundColor: AppColors.primary,
                   backgroundColor: Colors.white,
                 ),
                 const SizedBox(height: 20),
@@ -255,12 +256,12 @@ FECHA: ${DateTime.now().toString().substring(0, 16)}
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: azulCorporativo),
+        prefixIcon: Icon(icon, color: AppColors.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: azulCorporativo, width: 2),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
       ),
     );

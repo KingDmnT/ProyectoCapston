@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 class ReportarIncidentePage extends StatefulWidget {
   final String categoria; // [NUEVO] Recibimos la categoría seleccionada
@@ -16,8 +17,6 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
   final _descripcionCtrl = TextEditingController();
   
   // Eliminamos la lista _categorias y _categoriaSeleccionada porque ya no se usan
-
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
 
   void _enviarReporte() {
     if (_tituloCtrl.text.trim().isEmpty || _descripcionCtrl.text.trim().isEmpty) {
@@ -48,7 +47,7 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 25),
               decoration: BoxDecoration(
-                color: azulCorporativo,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -145,8 +144,8 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
                             icon: const Icon(Icons.camera_alt),
                             label: const Text("Adjuntar Foto"),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: azulCorporativo,
-                              side: BorderSide(color: azulCorporativo),
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(color: AppColors.primary),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                             ),
@@ -161,7 +160,7 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
                             child: ElevatedButton(
                               onPressed: _enviarReporte,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: azulCorporativo,
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 2,
@@ -198,7 +197,7 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: azulCorporativo,
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -220,7 +219,7 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: azulCorporativo),
+      prefixIcon: Icon(icon, color: AppColors.primary),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       enabledBorder: OutlineInputBorder(
@@ -229,7 +228,7 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: azulCorporativo, width: 2),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 class IniciarSesion extends StatefulWidget {
   const IniciarSesion({super.key});
@@ -12,7 +13,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
+  
 
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -49,7 +50,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
               height: 300, // <--- CAMBIO AQUÍ: Aumentado a 300 para evitar error amarillo
               padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
               decoration: BoxDecoration(
-                color: azulCorporativo,
+                color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -109,7 +110,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: "Correo Electrónico",
-                        prefixIcon: Icon(Icons.email_outlined, color: azulCorporativo),
+                        prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -117,7 +118,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: azulCorporativo, width: 2),
+                          borderSide: BorderSide(color: AppColors.primary, width: 2),
                         ),
                       ),
                     ),
@@ -128,7 +129,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: "Contraseña",
-                        prefixIcon: Icon(Icons.lock_outline, color: azulCorporativo),
+                        prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -136,7 +137,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: azulCorporativo, width: 2),
+                          borderSide: BorderSide(color: AppColors.primary, width: 2),
                         ),
                       ),
                     ),
@@ -149,7 +150,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: azulCorporativo,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -175,7 +176,7 @@ class _IniciarSesionState extends State<IniciarSesion> {
               onTap: () {},
               child: Text(
                 "¿Olvidaste tu contraseña?",
-                style: TextStyle(color: azulCorporativo, fontWeight: FontWeight.w600),
+                style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
               ),
             ),
             

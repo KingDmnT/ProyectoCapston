@@ -441,7 +441,7 @@ class _NewsCarousel extends StatelessWidget {
   final List<Map<String, dynamic>> news = const [
     {
       'text': 'Asamblea General\nEste Viernes 18:00',
-      'colors': [Color(0xFF2F3DBE), Color(0xFF6A75E6)],
+      'colors': [AppColors.primary, Color(0xFF6A75E6)],
       'icon': Icons.groups,
     },
     {
