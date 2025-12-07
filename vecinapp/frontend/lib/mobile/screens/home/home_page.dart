@@ -398,7 +398,7 @@ class _GastoComunCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
                 ),
                 child: const Text(
-                  "Pagar",
+                  "Ver Detalles",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -459,6 +459,7 @@ class _NewsCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      width: double.infinity,
       height: 140,
       child: CarouselSlider.builder(
         itemCount: news.length,
@@ -482,7 +483,7 @@ class _NewsCarousel extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(13),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
