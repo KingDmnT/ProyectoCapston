@@ -227,7 +227,7 @@ class _DashboardTab extends StatelessWidget {
                   onTap: () {
                     Navigator.pushNamed(context, '/mobile/reservas');
                   },
-                ),
+                ),/*
                 _QuickActionButton(
                   icon: Icons.videocam_outlined,
                   label: "Cámaras",
@@ -244,7 +244,7 @@ class _DashboardTab extends StatelessWidget {
                       const SnackBar(content: Text('Cartola - En desarrollo')),
                     );
                   },
-                ),
+                ),*/
                 _QuickActionButton(
                   icon: Icons.credit_card,
                   label: "Mis datos",
