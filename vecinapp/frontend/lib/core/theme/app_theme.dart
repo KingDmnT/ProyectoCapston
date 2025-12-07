@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 // Colores corporativos de VecinApp
 class AppColors {
   // Color principal (azul corporativo de vecinapp2)
-  static const Color primary = Color(0xFF2F3DBE);
+  static const Color primary = Color(0xFF5D3FD3);
   static const Color primaryLight = Color(0xFF5A68E8);
   static const Color primaryDark = Color(0xFF1E2B8F);
   
@@ -47,7 +47,7 @@ class AppTheme {
       ),
       
       // Cards
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 2,
         shape: RoundedRectangleBorder(
