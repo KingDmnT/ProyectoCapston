@@ -4,13 +4,11 @@ from enum import Enum
 from datetime import datetime, date
 
 class UserRole(str, Enum):
-    SUPER_ADMIN = "Super Admin"          # Admin de la plataforma
-    ADMINISTRADOR = "Administrador"      # Admin de la comunidad
-    CONSERJE = "Conserje"                # Encargado de recepción/mantención
-    GUARDIA = "Guardia"                  # Seguridad perimetral/accesos
-    PROPIETARIO = "Propietario"          # Dueño legal de la unidad
-    RESIDENTE = "Residente"              # Quien vive en la unidad (arrendatario/familiar)
-    VISITA = "Visita"                    # Visitante
+    administrator = "administrator"  # Admin (Super Admin o Administrador de comunidad)
+    resident = "resident"            # Residente (Propietario o quien vive en la unidad)
+    # Roles extendidos para futuras funcionalidades:
+    security = "security"            # Guardia de seguridad
+    visit = "visit"                  # Visitante
 
 class Gender(str, Enum):
     MASCULINO = "Masculino"
