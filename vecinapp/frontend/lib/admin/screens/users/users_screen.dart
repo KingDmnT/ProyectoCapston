@@ -17,7 +17,7 @@ class _UsersScreenState extends State<UsersScreen> {
   List<AppUser> _users = [];
   bool _isLoading = false;
   String? _filterRole;
-  bool? _filterActive = true; // Solo activos por defecto
+  bool? _filterActive; // null = Mostrar todos por defecto
   
   @override
   void initState() {
