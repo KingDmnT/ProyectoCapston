@@ -19,15 +19,10 @@ app = FastAPI(
 # --- Configuración de CORS ---
 # Permite la comunicación entre el frontend (Flutter Web) y este backend.
 # En producción, se debe restringir 'origins' a los dominios específicos.
-origins = [
-    "http://localhost",
-    "http://localhost:3000", 
-    "*"                      
-]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Permitir todas las origins en desarrollo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
