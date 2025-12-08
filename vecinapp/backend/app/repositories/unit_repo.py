@@ -24,14 +24,26 @@ class UnitRepository:
 
     def get_by_community(self, community_id: str) -> List[Unit]:
         """Obtiene todas las unidades de una comunidad específica"""
-        docs = self.collection.where('community_id', '==', community_id).stream()
-        return [Unit(**doc.to_dict()) for doc in docs]
+        # Las unidades están almacenadas como subcollection de communities
+        units_ref = self.db.collection('communities').document(community_id).collection('units')
+        docs = units_ref.stream()
+        units = []
+        for doc in docs:
+            unit_data = doc.to_dict()
+            unit_data['id'] = doc.id  # Agregar el ID del documento
+            units.append(Unit(**unit_data))
+        
+        # Ordenar por piso y luego por nombre (ej: 101, 102, 103, 201, 202, etc.)
+        units.sort(key=lambda u: (u.floor, u.name))
+        return units
 
     def get_by_id(self, unit_id: str) -> Optional[Unit]:
         """Busca una unidad por su ID"""
         doc = self.collection.document(unit_id).get()
         if doc.exists:
-            return Unit(**doc.to_dict())
+            unit_data = doc.to_dict()
+            unit_data['id'] = doc.id  # Agregar el ID del documento
+            return Unit(**unit_data)
         return None
 
     def update(self, unit_id: str, unit_update: dict) -> Optional[Unit]:
@@ -47,7 +59,9 @@ class UnitRepository:
         
         # Obtenemos el documento actualizado
         updated_doc = doc_ref.get()
-        return Unit(**updated_doc.to_dict())
+        unit_data = updated_doc.to_dict()
+        unit_data['id'] = updated_doc.id  # Agregar el ID del documento
+        return Unit(**unit_data)
 
     def delete(self, unit_id: str) -> bool:
         """Elimina una unidad (Hard delete por ahora, o soft si agregamos isActive)"""

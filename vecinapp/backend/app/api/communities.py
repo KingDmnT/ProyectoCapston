@@ -24,9 +24,23 @@ def list_communities(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Lista todas las comunidades activas.
+    Lista las comunidades activas.
+    Filtra automáticamente por comunidad para administradores no-super.
     """
-    return repo.get_all()
+    all_communities = repo.get_all()
+    
+    # Auto-filtrar por comunidad si es admin de comunidad (no super admin)
+    user_memberships = current_user.get("memberships", [])
+    
+    # Si el admin tiene memberships y solo tiene 1 (no es super admin)
+    if user_memberships and len(user_memberships) == 1:
+        # Obtener ID de la comunidad del admin
+        admin_community_id = user_memberships[0].get("community_id")
+        # Filtrar solo su comunidad
+        return [c for c in all_communities if c.id == admin_community_id]
+    
+    # Super admin o sin memberships: ver todas
+    return all_communities
 
 @router.get("/{community_id}", response_model=Community)
 def get_community(

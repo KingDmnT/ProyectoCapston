@@ -39,13 +39,20 @@ class CommunityRepository:
     def get_all(self) -> List[Community]:
         """Obtiene todas las comunidades activas"""
         docs = self.collection.where('is_active', '==', True).stream()
-        return [Community(**doc.to_dict()) for doc in docs]
+        communities = []
+        for doc in docs:
+            community_data = doc.to_dict()
+            community_data['id'] = doc.id  # Agregar el ID del documento
+            communities.append(Community(**community_data))
+        return communities
 
     def get_by_id(self, community_id: str) -> Optional[Community]:
         """Busca una comunidad por su ID"""
         doc = self.collection.document(community_id).get()
         if doc.exists:
-            return Community(**doc.to_dict())
+            community_data = doc.to_dict()
+            community_data['id'] = doc.id  # Agregar el ID del documento
+            return Community(**community_data)
         return None
 
     def update(self, community_id: str, community_update: dict) -> Optional[Community]:
@@ -68,7 +75,9 @@ class CommunityRepository:
         
         # Obtenemos el documento actualizado
         updated_doc = doc_ref.get()
-        return Community(**updated_doc.to_dict())
+        community_data = updated_doc.to_dict()
+        community_data['id'] = updated_doc.id  # Agregar el ID del documento
+        return Community(**community_data)
 
     def delete(self, community_id: str) -> bool:
         """Desactiva (soft delete) una comunidad"""
