@@ -9,6 +9,7 @@ from app.api import communities
 from app.api import units
 from app.api import users
 from app.api import visits
+from app.api import maintenance
 
 app = FastAPI(
     title="Condominio System API",
@@ -52,6 +53,9 @@ app.include_router(visits.router, prefix="/visits", tags=["Visits"])
 
 # Módulo de Autenticación
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+
+# Módulo de Mantenimiento
+app.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
 
 # --- Health Check ---
 @app.get("/")
