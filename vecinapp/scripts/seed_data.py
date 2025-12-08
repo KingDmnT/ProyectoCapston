@@ -376,6 +376,11 @@ def seed_complete_data():
     
     print(f"\n🎉 ¡Seed completado! 3 administradores + 10 residentes creados.")
     
+    # ========================================
+    # 4. CREAR MANTENIMIENTOS
+    # ========================================
+    seed_maintenances(comm1_id, comm1_data['name'], comm2_id, comm2_data['name'])
+    
     print("\n" + "="*60)
     print("🔐 CREDENCIALES:")
     print("\n   👑 SUPER ADMIN:")
@@ -393,6 +398,170 @@ def seed_complete_data():
     print("\n" + "="*60)
     print("✅ Listo para usar")
     print("="*60 + "\n")
+
+def create_maintenance(community_id, community_name, maintenance_data):
+    """Crea un mantenimiento en Firestore"""
+    maintenance_ref = db.collection('communities').document(community_id).collection('maintenances').document()
+    maintenance_id = maintenance_ref.id
+    
+    maintenance_data['id'] = maintenance_id
+    maintenance_data['community_id'] = community_id
+    maintenance_data['created_at'] = datetime.now()
+    maintenance_data['updated_at'] = datetime.now()
+    
+    maintenance_ref.set(maintenance_data)
+    print(f"   ✓ {maintenance_data['title']} - ${maintenance_data['cost']:,.0f} ({maintenance_data['frequency']})")
+    return maintenance_id
+
+def seed_maintenances(comm1_id, comm1_name, comm2_id, comm2_name):
+    """Crea mantenimientos de ejemplo para ambas comunidades"""
+    print("\n🔧 Creando mantenimientos...\n")
+    
+    # Calcular fechas
+    from datetime import timedelta
+    today = datetime.now()
+    next_week = today + timedelta(days=7)
+    
+    # ========================================
+    # MANTENIMIENTO 1: PISCINA (Semanal)
+    # ========================================
+    piscina_checklist = [
+        {"title": "Limpieza de filtros", "is_completed": False},
+        {"title": "Control de pH del agua", "is_completed": False},
+        {"title": "Aspirado del fondo de la piscina", "is_completed": False},
+        {"title": "Limpieza de bordes y paredes", "is_completed": False},
+        {"title": "Revisión de nivel de cloro", "is_completed": False},
+        {"title": "Limpieza de skimmers", "is_completed": False},
+    ]
+    
+    piscina_data = {
+        "title": "Mantenimiento de Piscina",
+        "description": "Mantenimiento preventivo semanal de la piscina comunitaria. Incluye limpieza, control químico del agua y revisión de sistemas de filtrado.",
+        "type": "preventivo",
+        "frequency": "semanal",
+        "provider_name": "Servicios Acuáticos Ltda",
+        "provider_contact": "+56912345678",
+        "cost": 200000,
+        "scheduled_date": next_week,
+        "completed_date": None,
+        "status": "pendiente",
+        "assigned_to": None,
+        "approved_by": None,
+        "approval_date": None,
+        "notes": "Costo mensual de $200.000 con facturación mensual única",
+        "checklist_items": piscina_checklist,
+    }
+    
+    # ========================================
+    # MANTENIMIENTO 2: JARDINES (2x Semana)
+    # ========================================
+    jardines_checklist = [
+        {"title": "Corte y perfilado de césped", "is_completed": False},
+        {"title": "Riego de áreas verdes", "is_completed": False},
+        {"title": "Poda de arbustos y setos", "is_completed": False},
+        {"title": "Control de malezas", "is_completed": False},
+        {"title": "Fertilización del césped", "is_completed": False},
+        {"title": "Limpieza de hojas y residuos", "is_completed": False},
+        {"title": "Revisión de sistema de riego", "is_completed": False},
+    ]
+    
+    jardines_data = {
+        "title": "Mantenimiento de Jardines",
+        "description": "Mantenimiento preventivo de áreas verdes 2 veces por semana. Incluye corte de césped, poda, riego y fertilización de jardines comunitarios.",
+        "type": "preventivo",
+        "frequency": "semanal",
+        "provider_name": "Jardines del Sur SpA",
+        "provider_contact": "+56987654321",
+        "cost": 450000,
+        "scheduled_date": next_week,
+        "completed_date": None,
+        "status": "pendiente",
+        "assigned_to": None,
+        "approved_by": None,
+        "approval_date": None,
+        "notes": "Servicio 2 veces por semana. Costo mensual de $450.000 con facturación mensual única",
+        "checklist_items": jardines_checklist,
+    }
+    
+    # ========================================
+    # MANTENIMIENTO 3: CONTROL DE PLAGAS (Mensual)
+    # ========================================
+    plagas_checklist = [
+        {"title": "Fumigación de áreas comunes", "is_completed": False},
+        {"title": "Revisión de puntos críticos", "is_completed": False},
+        {"title": "Aplicación de gel anti-hormigas", "is_completed": False},
+        {"title": "Control de roedores", "is_completed": False},
+        {"title": "Inspección de sótanos y bodegas", "is_completed": False},
+        {"title": "Colocación de trampas adhesivas", "is_completed": False},
+        {"title": "Informe técnico de tratamiento", "is_completed": False},
+    ]
+    
+    plagas_data = {
+        "title": "Control de Plagas",
+        "description": "Servicio preventivo mensual de control de plagas. Incluye fumigación, control de roedores e insectos en áreas comunes y exteriores.",
+        "type": "preventivo",
+        "frequency": "mensual",
+        "provider_name": "Fumigaciones Express Ltda",
+        "provider_contact": "+56923456789",
+        "cost": 180000,
+        "scheduled_date": next_week,
+        "completed_date": None,
+        "status": "pendiente",
+        "assigned_to": None,
+        "approved_by": None,
+        "approval_date": None,
+        "notes": "Servicio mensual. Costo de $180.000 con facturación mensual",
+        "checklist_items": plagas_checklist,
+    }
+    
+    # ========================================
+    # MANTENIMIENTO 4: PORTÓN ELÉCTRICO (Extraordinario)
+    # ========================================
+    porton_checklist = [
+        {"title": "Revisión de motor eléctrico", "is_completed": False},
+        {"title": "Lubricación de rieles y cadenas", "is_completed": False},
+        {"title": "Ajuste de sensores de seguridad", "is_completed": False},
+        {"title": "Prueba de sistema de apertura", "is_completed": False},
+        {"title": "Revisión de cableado eléctrico", "is_completed": False},
+        {"title": "Limpieza de fotocélulas", "is_completed": False},
+        {"title": "Verificación de control remoto", "is_completed": False},
+        {"title": "Ajuste de límites de recorrido", "is_completed": False},
+    ]
+    
+    porton_data = {
+        "title": "Reparación Portón Eléctrico",
+        "description": "Mantenimiento extraordinario del portón eléctrico de acceso. Incluye revisión completa del sistema, ajustes y reparaciones necesarias.",
+        "type": "extraordinario",
+        "frequency": "unica_vez",
+        "provider_name": "Automatización y Portones S.A.",
+        "provider_contact": "+56934567890",
+        "cost": 90000,
+        "scheduled_date": next_week,
+        "completed_date": None,
+        "status": "pendiente",
+        "assigned_to": None,
+        "approved_by": None,
+        "approval_date": None,
+        "notes": "Trabajo extraordinario. Costo único de $90.000",
+        "checklist_items": porton_checklist,
+    }
+    
+    # Crear mantenimientos para Comunidad 1
+    print(f"📍 {comm1_name}:")
+    create_maintenance(comm1_id, comm1_name, piscina_data.copy())
+    create_maintenance(comm1_id, comm1_name, jardines_data.copy())
+    create_maintenance(comm1_id, comm1_name, plagas_data.copy())
+    create_maintenance(comm1_id, comm1_name, porton_data.copy())
+    
+    # Crear mantenimientos para Comunidad 2
+    print(f"\n📍 {comm2_name}:")
+    create_maintenance(comm2_id, comm2_name, piscina_data.copy())
+    create_maintenance(comm2_id, comm2_name, jardines_data.copy())
+    create_maintenance(comm2_id, comm2_name, plagas_data.copy())
+    create_maintenance(comm2_id, comm2_name, porton_data.copy())
+    
+    print(f"\n✅ 8 mantenimientos creados (4 por comunidad)")
+    print(f"   Total mensual por comunidad: $920.000")
 
 if __name__ == "__main__":
     seed_complete_data()
