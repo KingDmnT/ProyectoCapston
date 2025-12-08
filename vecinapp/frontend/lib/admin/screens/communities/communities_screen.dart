@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:vecinapp/core/models/community.dart';
+import 'package:vecinapp/core/models/user.dart';
 import 'package:vecinapp/core/services/community_service.dart';
+import 'package:vecinapp/core/services/user_service.dart';
+import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -20,12 +24,34 @@ class CommunitiesScreen extends StatefulWidget {
 
 class _CommunitiesScreenState extends State<CommunitiesScreen> {
   final CommunityService _service = CommunityService();
+  final UserService _userService = UserService();
   late Future<List<Community>> _communitiesFuture;
+  AppUser? _currentUser;  // Usuario actual para verificar permisos
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadCommunities();
+  }
+  
+  Future<void> _loadCurrentUser() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      if (user != null) {
+        final userData = await _userService.getUserById(user.uid);
+        setState(() => _currentUser = userData);
+      }
+    } catch (e) {
+      print('Error cargando usuario actual: $e');
+    }
+  }
+  
+  // Helper para verificar si es super admin (múltiples memberships)
+  bool get _isSuperAdmin {
+    if (_currentUser == null || _currentUser!.memberships.isEmpty) return false;
+    return _currentUser!.memberships.length > 1;
   }
 
   void _loadCommunities() {
@@ -163,17 +189,21 @@ class _CommunitiesScreenState extends State<CommunitiesScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            OutlinedButton.icon(
-              onPressed: _handleBulkUpload,
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Carga Masiva (Excel)'),
-            ),
-            const SizedBox(width: 16),
-            FilledButton.icon(
-              onPressed: () => _showCommunityDialog(),
-              icon: const Icon(Icons.add),
-              label: const Text('Nueva Comunidad'),
-            ),
+            // Carga masiva - SOLO super admin
+            if (_isSuperAdmin)
+              OutlinedButton.icon(
+                onPressed: _handleBulkUpload,
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Carga Masiva (Excel)'),
+              ),
+            if (_isSuperAdmin) const SizedBox(width: 16),
+            // Nueva comunidad - SOLO super admin
+            if (_isSuperAdmin)
+              FilledButton.icon(
+                onPressed: () => _showCommunityDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Nueva Comunidad'),
+              ),
           ],
         ),
         const SizedBox(height: 24),

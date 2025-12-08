@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
+import 'package:vecinapp/shared/widgets/auth_wrapper.dart';
 import 'package:vecinapp/shared/screens/welcome_screen.dart';
 import 'package:vecinapp/shared/screens/login_screen.dart';
 
@@ -34,10 +35,10 @@ class VecinApp extends StatelessWidget {
         title: 'VecinApp',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: '/',
+        home: const AuthWrapper(), // Usar AuthWrapper para persistir sesión
         routes: {
           // Rutas compartidas
-          '/': (_) => const WelcomeScreen(),
+          '/welcome': (_) => const WelcomeScreen(),
           '/login': (_) => const LoginScreen(),
           
           // Rutas mobile (residentes)
