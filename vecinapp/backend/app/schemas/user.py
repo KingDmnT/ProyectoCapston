@@ -35,8 +35,11 @@ class CommunityMembershipBase(BaseModel):
     community_id: str
     community_name: Optional[str] = None
     # Un usuario puede ser Propietario Y Residente al mismo tiempo
-    roles: List[UserRole] = [UserRole.RESIDENTE]
-    unit_ids: List[str] = [] # Unidades asociadas
+    roles: List[UserRole] = [UserRole.resident]
+    
+    # Unidad asignada (una membership por unidad)
+    unit_id: Optional[str] = None  # ID de la unidad
+    unit_number: Optional[str] = None  # Número/nombre de la unidad (ej: "404")
     
     # Vigencia de la membresía (Historial)
     start_date: datetime = Field(default_factory=datetime.now)
@@ -65,9 +68,11 @@ class UserBase(BaseModel):
     
 class UserCreate(UserBase):
     password: str # Necesario para crear la cuenta en Auth
+    role: UserRole = UserRole.resident  # Rol principal del usuario
 
 class User(UserBase):
     id: str # Firebase UID (o generado para visitas sin cuenta)
+    role: UserRole  # Rol principal del usuario
     is_active: bool = True
     memberships: List[CommunityMembershipBase] = []
     photoUrl: Optional[str] = None  # URL de foto de perfil (Firebase Storage cuando esté disponible)
@@ -93,4 +98,4 @@ class UserUpdate(BaseModel):
 class UserAssignUnit(BaseModel):
     community_id: str
     unit_id: str
-    roles: List[UserRole] = [UserRole.RESIDENTE]
+    roles: List[UserRole] = [UserRole.resident]
