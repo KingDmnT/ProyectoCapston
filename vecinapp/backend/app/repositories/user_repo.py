@@ -194,14 +194,15 @@ class UserRepository:
         if not unit_doc.exists:
             raise ValueError("Unidad no encontrada")
         
-        unit_number = unit_doc.to_dict().get('unit_number', '')
+        # Extraer el nombre de la unidad
+        unit_name = unit_doc.to_dict().get('name', '')
         
-        # Crear nueva membresía
+        # Crear nueva membresía (una por unidad)
         new_membership = {
             'community_id': community_id,
             'community_name': community_name,
             'unit_id': unit_id,
-            'unit_number': unit_number,
+            'unit_number': unit_name,  # Guardar el name de la unidad
             'roles': [r.value if isinstance(r, UserRole) else r for r in roles],
             'start_date': datetime.now(),
             'is_active': True
@@ -210,18 +211,18 @@ class UserRepository:
         # Obtener membresías actuales
         memberships = user_data.get('memberships', [])
         
-        # Verificar si ya tiene membresía en esta comunidad
+        # Verificar si ya tiene esta UNIDAD específica asignada
         existing_idx = None
         for idx, m in enumerate(memberships):
-            if m.get('community_id') == community_id:
+            if m.get('community_id') == community_id and m.get('unit_id') == unit_id:
                 existing_idx = idx
                 break
         
         if existing_idx is not None:
-            # Actualizar membresía existente
+            # Actualizar membresía existente de esta unidad
             memberships[existing_idx] = new_membership
         else:
-            # Agregar nueva membresía
+            # Agregar nueva membresía (permite múltiples unidades por comunidad)
             memberships.append(new_membership)
         
         # Actualizar usuario
@@ -230,9 +231,10 @@ class UserRepository:
             'updated_at': datetime.now()
         })
         
-        # Marcar unidad como ocupada
+        # Marcar unidad como ocupada y cambiar estado a Asignado
         unit_ref.update({
             'is_occupied': True,
+            'status': 'Asignado',  # Cambiar estado de la unidad
             'resident_uid': user_id,
             'resident_name': f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}",
             'updated_at': datetime.now()
@@ -268,16 +270,67 @@ class UserRepository:
             'updated_at': datetime.now()
         })
         
-        # Liberar unidad si existía
+        # Liberar unidad si existía y restaurar estado a Disponible
         if unit_id_to_free:
             community_ref = self.db.collection('communities').document(community_id)
             unit_ref = community_ref.collection('units').document(unit_id_to_free)
             unit_ref.update({
                 'is_occupied': False,
+                'status': 'Disponible',  # Restaurar estado de la unidad
                 'resident_uid': None,
                 'resident_name': None,
                 'updated_at': datetime.now()
             })
+        
+        return self.get_by_id(user_id)
+
+    def unassign_from_unit(self, user_id: str, community_id: str, unit_id: str) -> Optional[User]:
+        """
+        Desasigna un usuario de UNA unidad específica.
+        Elimina la membership correspondiente y libera la unidad.
+        """
+        user_ref = self.collection.document(user_id)
+        user_doc = user_ref.get()
+        
+        if not user_doc.exists:
+            return None
+        
+        user_data = user_doc.to_dict()
+        memberships = user_data.get('memberships', [])
+        
+        # Encontrar y ELIMINAR la membership de esta unidad específica
+        new_memberships = []
+        unit_found = False
+        
+        for membership in memberships:
+            if (membership.get('community_id') == community_id and 
+                membership.get('unit_id') == unit_id):
+                # Esta es la que queremos eliminar
+                unit_found = True
+            else:
+                # Mantener las demás
+                new_memberships.append(membership)
+        
+        if not unit_found:
+            # No se encontró esa membership
+            return self.get_by_id(user_id)
+        
+        # Actualizar usuario con memberships filtradas
+        user_ref.update({
+            'memberships': new_memberships,
+            'updated_at': datetime.now()
+        })
+        
+        # Liberar la unidad
+        community_ref = self.db.collection('communities').document(community_id)
+        unit_ref = community_ref.collection('units').document(unit_id)
+        unit_ref.update({
+            'is_occupied': False,
+            'status': 'Disponible',
+            'resident_uid': None,
+            'resident_name': None,
+            'updated_at': datetime.now()
+        })
         
         return self.get_by_id(user_id)
 
