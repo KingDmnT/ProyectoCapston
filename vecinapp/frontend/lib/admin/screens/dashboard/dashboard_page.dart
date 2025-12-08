@@ -4,6 +4,7 @@ import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/admin/screens/communities/communities_screen.dart';
 import 'package:vecinapp/admin/screens/users/users_screen.dart';
+import 'package:vecinapp/admin/screens/maintenance/maintenance_screen.dart';
 
 // Dashboard principal del administrador (backoffice web)
 class AdminDashboardPage extends StatefulWidget {
@@ -21,6 +22,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     const _DashboardView(),
     const CommunitiesScreen(),
     const UsersScreen(),
+    const MaintenanceScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
   ];
   
@@ -28,6 +30,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     "Dashboard General",
     "Gestión de Comunidades",
     "Gestión de Usuarios",
+    "Gestión de Mantenimientos",
     "Gestión de Visitas"
   ];
 
@@ -95,6 +98,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icon(Icons.people_outline),
                 selectedIcon: Icon(Icons.people, color: AppColors.primary),
                 label: Text('Usuarios'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.build_outlined),
+                selectedIcon: Icon(Icons.build, color: AppColors.primary),
+                label: Text('Mantenimiento'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.qr_code_scanner_outlined),

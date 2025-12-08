@@ -17,6 +17,7 @@ import 'package:vecinapp/mobile/screens/mis_datos_page.dart';
 // Importar pantallas admin
 import 'package:vecinapp/admin/screens/dashboard/dashboard_page.dart';
 import 'package:vecinapp/admin/screens/users/users_screen.dart';
+import 'package:vecinapp/admin/screens/maintenance/maintenance_screen.dart';
 
 // Configuración principal de la aplicación
 class VecinApp extends StatelessWidget {
@@ -55,6 +56,7 @@ class VecinApp extends StatelessWidget {
           // Rutas admin (administradores)
           '/admin/dashboard': (_) => const AdminDashboardPage(),
           '/admin/users': (_) => const UsersScreen(),
+          '/admin/maintenance': (_) => const MaintenanceScreen(),
         },
       ),
     );
