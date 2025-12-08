@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
+import random
 
 # --- Configuración ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,6 @@ if not firebase_admin._apps:
     print(f"✅ Firebase Admin inicializado con {cred_path}")
 
 # Conectar a la base de datos predeterminada de Firestore
-# NOTA: Usando DB predeterminada porque Flutter Web tiene problemas con DBs nombradas
 from google.cloud import firestore as google_firestore
 db = google_firestore.Client(
     credentials=cred.get_credential(), 
@@ -29,10 +29,7 @@ db = google_firestore.Client(
 
 # === FUNCIÓN DE LIMPIEZA ===
 def cleanup_data():
-    """
-    Elimina todos los datos de Firestore y usuarios de Auth.
-    ⚠️ CUIDADO: Esta función borra TODOS los datos.
-    """
+    """Elimina todos los datos de Firestore y usuarios de Auth."""
     print("\n🧹 LIMPIANDO DATOS EXISTENTES...")
     
     # 1. Eliminar usuarios de Firebase Auth
@@ -87,11 +84,11 @@ def create_auth_user(email, password, display_name):
             display_name=display_name,
             email_verified=True
         )
-        print(f"✅ Usuario Auth creado: {email} (UID: {user_auth.uid})")
+        print(f"✅ Usuario Auth creado: {email}")
         return user_auth.uid
     except auth.EmailAlreadyExistsError:
         user_auth = auth.get_user_by_email(email)
-        print(f"ℹ️  Usuario Auth ya existe: {email} (UID: {user_auth.uid})")
+        print(f"ℹ️  Usuario Auth ya existe: {email}")
         return user_auth.uid
     except Exception as e:
         print(f"❌ Error creando usuario {email}: {e}")
@@ -116,55 +113,48 @@ def create_community_with_units(name, address, comuna, region, floors=4, units_p
     community_ref.set(community_data)
     print(f"✅ Comunidad creada: {name} (ID: {community_id})")
     
-    # Crear unidades (edificio con pisos y departamentos)
+    # Crear unidades
     units = []
-    unit_number = 1
-    
     for floor in range(1, floors + 1):
         for dept in range(1, units_per_floor + 1):
-            # Formato: Piso-Depto (ej: 101, 102, ..., 201, 202, etc.)
             unit_code = f"{floor}{dept:02d}"
             
             unit_data = {
-                "unit_number": unit_code,
+                "name": unit_code,
                 "floor": floor,
-                "type": "apartment",  # departamento
-                "is_occupied": False,
-                "created_at": datetime.now()
+                "type": "Departamento",
+                "status": "Disponible",
+                "community_id": community_id,
+                "alicuota": round(100.0 / (floors * units_per_floor), 2),
+                "m2": 45.0,
+                "description": f"Departamento {unit_code}",
             }
             
-            # Guardar en subcollection 'units' de la comunidad
             unit_ref = community_ref.collection('units').document()
+            unit_data["id"] = unit_ref.id
             unit_ref.set(unit_data)
             
             units.append({
                 "id": unit_ref.id,
-                "unit_number": unit_code,
+                "name": unit_code,
                 "floor": floor
             })
-            
-            unit_number += 1
     
-    print(f"   └─ {len(units)} unidades creadas ({floors} pisos × {units_per_floor} deptos/piso)")
-    
+    print(f"   └─ {len(units)} unidades creadas")
     return community_id, community_data, units
 
-def create_user_profile(uid, first_name, last_name, email, role, community_memberships):
-    """
-    Crea el perfil de usuario en Firestore
-    
-    Args:
-        uid: UID del usuario en Firebase Auth
-        role: 'administrator' o 'resident'
-        community_memberships: Lista de diccionarios con info de comunidades
-    """
+def create_user_profile(uid, first_name, last_name, email, role, rut, community_memberships):
+    """Crea el perfil de usuario en Firestore"""
     user_ref = db.collection('users').document(uid)
     
     user_data = {
         "id": uid,
+        "first_name": first_name,
+        "last_name": last_name,
         "name": f"{first_name} {last_name}",
         "email": email,
         "role": role,
+        "rut": rut,
         "photoUrl": None,
         "communityId": community_memberships[0]['community_id'] if community_memberships else None,
         "memberships": community_memberships,
@@ -173,8 +163,6 @@ def create_user_profile(uid, first_name, last_name, email, role, community_membe
     }
     
     user_ref.set(user_data, merge=True)
-    print(f"✅ Perfil de {role} guardado: {first_name} {last_name}")
-    
     return user_data
 
 def seed_complete_data():
@@ -183,7 +171,6 @@ def seed_complete_data():
     print("🌱 POBLAMIENTO COMPLETO DE FIREBASE")
     print("="*60 + "\n")
     
-    # LIMPIAR DATOS EXISTENTES
     cleanup_data()
     
     # ========================================
@@ -191,7 +178,6 @@ def seed_complete_data():
     # ========================================
     print("📍 Creando comunidades...\n")
     
-    # Comunidad 1: Edificio Las Condes
     comm1_id, comm1_data, comm1_units = create_community_with_units(
         name="Edificio Las Condes",
         address="Av. Apoquindo 4500",
@@ -201,7 +187,6 @@ def seed_complete_data():
         units_per_floor=6
     )
     
-    # Comunidad 2: Condominio Huechuraba
     comm2_id, comm2_data, comm2_units = create_community_with_units(
         name="Condominio Conecta Huechuraba",
         address="Av. Pedro Fontova 5200",
@@ -214,34 +199,19 @@ def seed_complete_data():
     print()
     
     # ========================================
-    # 2. CREAR USUARIOS EN FIREBASE AUTH
+    # 2. CREAR SUPER ADMIN Y ADMINS
     # ========================================
-    print("👤 Creando usuarios en Firebase Auth...\n")
+    print("👑 Creando Super Admin y Administradores...\n")
     
-    # Usuario Administrador
-    admin_uid = create_auth_user(
-        email="caravenav1989@gmail.com",
+    # Super Admin (ve todas las comunidades)
+    super_admin_uid = create_auth_user(
+        email="admin@vecinapp.cl",
         password="Admin123!",
-        display_name="Carlos Aravena"
+        display_name="Admin Sistema"
     )
     
-    # Usuario Residente
-    resident_uid = create_auth_user(
-        email="residente@vecinapp.cl",
-        password="Residente123!",
-        display_name="María González"
-    )
-    
-    print()
-    
-    # ========================================
-    # 3. CREAR PERFILES EN FIRESTORE
-    # ========================================
-    print("📝 Creando perfiles en Firestore...\n")
-    
-    # Perfil del Administrador (asignado a ambas comunidades)
-    if admin_uid:
-        admin_memberships = [
+    if super_admin_uid:
+        super_admin_memberships = [
             {
                 "community_id": comm1_id,
                 "community_name": comm1_data['name'],
@@ -259,85 +229,169 @@ def seed_complete_data():
         ]
         
         create_user_profile(
-            uid=admin_uid,
-            first_name="Carlos",
-            last_name="Aravena",
-            email="caravenav1989@gmail.com",
+            uid=super_admin_uid,
+            first_name="Admin",
+            last_name="Sistema",
+            email="admin@vecinapp.cl",
             role="administrator",
-            community_memberships=admin_memberships
+            rut="11111111-1",
+            community_memberships=super_admin_memberships
         )
+        print("✅ Super Admin creado")
     
-    # Perfil del Residente (asignado a Edificio Las Condes, depto 301)
-    if resident_uid:
-        # Asignar al departamento 301 (piso 3, depto 01)
-        assigned_unit = next((u for u in comm1_units if u['unit_number'] == '301'), None)
-        
-        resident_memberships = [
-            {
-                "community_id": comm1_id,
-                "community_name": comm1_data['name'],
-                "unit_id": assigned_unit['id'] if assigned_unit else None,
-                "unit_number": assigned_unit['unit_number'] if assigned_unit else None,
-                "roles": ["resident"],
-                "start_date": datetime.now(),
-                "is_active": True
-            }
-        ]
+    # Admin Edificio Las Condes
+    admin1_uid = create_auth_user(
+        email="admin.lascondes@vecinapp.cl",
+        password="Admin123!",
+        display_name="Pedro Administrador"
+    )
+    
+    if admin1_uid:
+        admin1_memberships = [{
+            "community_id": comm1_id,
+            "community_name": comm1_data['name'],
+            "roles": ["administrator"],
+            "start_date": datetime.now(),
+            "is_active": True
+        }]
         
         create_user_profile(
-            uid=resident_uid,
-            first_name="María",
-            last_name="González",
-            email="residente@vecinapp.cl",
-            role="resident",
-            community_memberships=resident_memberships
+            uid=admin1_uid,
+            first_name="Pedro",
+            last_name="Administrador",
+            email="admin.lascondes@vecinapp.cl",
+            role="administrator",
+            rut="22222222-2",
+            community_memberships=admin1_memberships
+        )
+        print("✅ Admin Las Condes creado")
+    
+    # Admin Condominio Huechuraba
+    admin2_uid = create_auth_user(
+        email="admin.huechuraba@vecinapp.cl",
+        password="Admin123!",
+        display_name="Laura Administradora"
+    )
+    
+    if admin2_uid:
+        admin2_memberships = [{
+            "community_id": comm2_id,
+            "community_name": comm2_data['name'],
+            "roles": ["administrator"],
+            "start_date": datetime.now(),
+            "is_active": True
+        }]
+        
+        create_user_profile(
+            uid=admin2_uid,
+            first_name="Laura",
+            last_name="Administradora",
+            email="admin.huechuraba@vecinapp.cl",
+            role="administrator",
+            rut="33333333-3",
+            community_memberships=admin2_memberships
+        )
+        print("✅ Admin Huechuraba creado")
+    
+    print()
+    
+    # ========================================
+    # 3. CREAR 10 RESIDENTES (5 POR COMUNIDAD)
+    # ========================================
+    print("👥 Creando 10 residentes de prueba...\n")
+    
+    # Nombres para testing (reducidos a 10)
+    resident_names = [
+        ("Ana", "Torres"), ("Juan", "López"), ("María", "Rojas"), ("Carlos", "Silva"),
+        ("Sofía", "Muñoz"), ("Diego", "Vega"), ("Francisca", "Castro"), ("Matías", "Soto"),
+        ("Valentina", "Mora"), ("Sebastián", "Paz")
+    ]
+    
+    rut_base = 15000000
+    
+    # Distribuir: 5 en cada comunidad
+    for i, (first_name, last_name) in enumerate(resident_names):
+        # Alternar entre comunidades: primeros 5 en comm1, siguientes 5 en comm2
+        if i < 5:
+            community_id = comm1_id
+            community_name = comm1_data['name']
+            units = comm1_units
+        else:
+            community_id = comm2_id
+            community_name = comm2_data['name']
+            units = comm2_units
+        
+        email = f"{first_name.lower()}.{last_name.lower()}@test.cl"
+        
+        # Crear usuario en Auth
+        resident_uid = create_auth_user(
+            email=email,
+            password="Test123!",
+            display_name=f"{first_name} {last_name}"
         )
         
-        # Marcar la unidad como ocupada
-        if assigned_unit:
-            unit_ref = db.collection('communities').document(comm1_id).collection('units').document(assigned_unit['id'])
-            unit_ref.update({
-                "is_occupied": True,
-                "resident_uid": resident_uid,
-                "resident_name": "María González"
-            })
-            print(f"   └─ Unidad {assigned_unit['unit_number']} asignada a María González")
+        if resident_uid:
+            # Asignar 1-2 unidades al azar
+            num_units = random.randint(1, 2)
+            assigned_units = random.sample(units, num_units)
+            
+            # Crear memberships con unidades (una membership por unidad)
+            memberships = []
+            for unit in assigned_units:
+                membership = {
+                    "community_id": community_id,
+                    "community_name": community_name,
+                    "unit_id": unit['id'],
+                    "unit_number": unit['name'],  # Usar 'name' en field 'unit_number'
+                    "roles": ["resident"],
+                    "start_date": datetime.now(),
+                    "is_active": True
+                }
+                memberships.append(membership)
+            
+            # Crear perfil en Firestore
+            create_user_profile(
+                uid=resident_uid,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                role="resident",
+                rut=f"{rut_base + i}-{random.randint(0, 9)}",
+                community_memberships=memberships
+            )
+            
+            # Actualizar estado de las unidades asignadas
+            for assigned_unit in assigned_units:
+                unit_ref = db.collection('communities').document(community_id).collection('units').document(assigned_unit['id'])
+                unit_ref.update({
+                    'status': 'Asignado',
+                    'is_occupied': True,
+                    'resident_uid': resident_uid,
+                    'resident_name': f"{first_name} {last_name}",
+                    'updated_at': datetime.now()
+                })
+            
+            unit_names = ', '.join([u['name'] for u in assigned_units])
+            print(f"✅ {first_name} {last_name} ({community_name}) - Unidades: {unit_names}")
     
-    # ========================================
-    # RESUMEN FINAL
-    # ========================================
+    print(f"\n🎉 ¡Seed completado! 3 administradores + 10 residentes creados.")
+    
     print("\n" + "="*60)
-    print("🎉 ¡DATOS CARGADOS EXITOSAMENTE!")
-    print("="*60)
-    
-    print("\n📊 RESUMEN:")
-    print(f"   • Comunidades creadas: 2")
-    print(f"   • Unidades por comunidad: 24 (4 pisos × 6 deptos)")
-    print(f"   • Usuarios creados: 2")
-    
-    print("\n🔐 CREDENCIALES DE ACCESO:")
-    print("\n   👨‍💼 ADMINISTRADOR:")
-    print(f"      Email: caravenav1989@gmail.com")
+    print("🔐 CREDENCIALES:")
+    print("\n   👑 SUPER ADMIN:")
+    print(f"      Email: admin@vecinapp.cl")
     print(f"      Password: Admin123!")
-    print(f"      Acceso: Ambas comunidades")
     
-    print("\n   👤 RESIDENTE:")
-    print(f"      Email: residente@vecinapp.cl")
-    print(f"      Password: Residente123!")
-    print(f"      Comunidad: {comm1_data['name']}")
-    print(f"      Unidad: 301")
+    print("\n   👨‍💼 ADMINS DE COMUNIDAD:")
+    print(f"      admin.lascondes@vecinapp.cl / Admin123!")
+    print(f"      admin.huechuraba@vecinapp.cl / Admin123!")
     
-    print("\n📍 COMUNIDADES:")
-    print(f"   1. {comm1_data['name']}")
-    print(f"      📍 {comm1_data['address']}, {comm1_data['comuna']}")
-    print(f"      🏢 24 unidades (101-106, 201-206, 301-306, 401-406)")
-    
-    print(f"\n   2. {comm2_data['name']}")
-    print(f"      📍 {comm2_data['address']}, {comm2_data['comuna']}")
-    print(f"      🏢 24 unidades (101-106, 201-206, 301-306, 401-406)")
+    print("\n   👤 RESIDENTES (todos):") 
+    print(f"      Password: Test123!")
+    print(f"      Ejemplos: ana.torres@test.cl, juan.lopez@test.cl")
     
     print("\n" + "="*60)
-    print("✅ Listo para usar con: cd frontend && flutter run -d chrome")
+    print("✅ Listo para usar")
     print("="*60 + "\n")
 
 if __name__ == "__main__":
