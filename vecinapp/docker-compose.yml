@@ -10,6 +10,7 @@ services:
     volumes:
       # Montamos las credenciales para que el contenedor tenga acceso
       - ./credentials:/app/credentials
+      - ./backend/app:/app/app
     environment:
       # Configuramos la ruta de credenciales para Docker
       - FIREBASE_CREDENTIALS_PATH=/app/credentials/serviceAccountKey.json

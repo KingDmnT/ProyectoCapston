@@ -22,4 +22,5 @@ EXPOSE 8000
 
 # Comando para ejecutar la aplicación
 # Usamos --host 0.0.0.0 para que sea accesible desde fuera del contenedor
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --reload para desarrollo (hot-reload automático)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
