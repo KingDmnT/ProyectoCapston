@@ -102,23 +102,31 @@ class CommunityMembership {
 
 class AppUser {
   final String id; // UID de Firebase Auth
-  final String name;
+  final String name; // Nombre completo
+  final String? firstName; // Nombre separado
+  final String? lastName; // Apellido separado
   final String email;
   final UserRole role;
   final String? photoUrl;
   final String? communityId; // ID de la comunidad principal
   final List<CommunityMembership> memberships;
   final bool isActive;
+  final String? rut; // RUT del usuario
+  final String? phone; // Teléfono del usuario
 
   AppUser({
     required this.id,
     required this.name,
+    this.firstName,
+    this.lastName,
     required this.email,
     required this.role,
     this.photoUrl,
     this.communityId,
     this.memberships = const [],
     this.isActive = true,
+    this.rut,
+    this.phone,
   });
 
   // Métodos helper para verificar roles
@@ -130,6 +138,8 @@ class AppUser {
     return AppUser(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
+      firstName: json['first_name'],
+      lastName: json['last_name'],
       email: json['email'] ?? '',
       role: UserRoleExtension.fromString(json['role'] ?? 'resident'),
       photoUrl: json['photoUrl'],
@@ -139,6 +149,8 @@ class AppUser {
               .toList() ??
           [],
       isActive: json['is_active'] ?? json['isActive'] ?? true,
+      rut: json['rut'],
+      phone: json['phone'],
     );
   }
 
@@ -147,6 +159,8 @@ class AppUser {
     return AppUser(
       id: uid,
       name: data['name'] ?? '',
+      firstName: data['first_name'],
+      lastName: data['last_name'],
       email: data['email'] ?? '',
       role: data['role'] == 'administrator' ? UserRole.administrator : UserRole.resident,
       photoUrl: data['photoUrl'],
@@ -156,6 +170,8 @@ class AppUser {
               .toList() ??
           [],
       isActive: data['is_active'] ?? data['isActive'] ?? true,
+      rut: data['rut'],
+      phone: data['phone'],
     );
   }
 
@@ -170,6 +186,8 @@ class AppUser {
       'communityId': communityId,
       'memberships': memberships.map((m) => m.toJson()).toList(),
       'is_active': isActive,
+      'rut': rut,
+      'phone': phone,
     };
   }
 
