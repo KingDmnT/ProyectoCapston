@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 import '../services/local_auth.dart';
 import '../models/app_user.dart';
 
@@ -59,7 +60,7 @@ class _PaginaPrincipalState extends State<PaginaPrincipal> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color(0xFF2F3DBE),
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [
@@ -107,7 +108,7 @@ class _DashboardTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
             decoration: const BoxDecoration(
-              color: Color(0xFF2F3DBE),
+              color: AppColors.primary,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -119,7 +120,7 @@ class _DashboardTab extends StatelessWidget {
                   radius: 24,
                   backgroundColor: Colors.white,
                   child: Text(nombre.isNotEmpty ? nombre[0].toUpperCase() : 'U', 
-                    style: const TextStyle(color: Color(0xFF2F3DBE), fontWeight: FontWeight.bold)),
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -208,7 +209,7 @@ class _QuickActionButton extends StatelessWidget {
               height: 55,
               width: 55,
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 67, 104, 173), 
+                color: AppColors.primary, 
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.grey.withOpacity(0.3)),
                 boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0,2))]
@@ -236,7 +237,7 @@ class _GastoComunCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color:  Color(0xFF2F3DBE), // Fondo oscuro estilo "Dark Mode" de la tarjeta
+        color: AppColors.primary, // Fondo oscuro estilo "Dark Mode" de la tarjeta
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
       ),
@@ -252,7 +253,7 @@ class _GastoComunCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF43CE88), // Verde del botón "Pagar"
+                  backgroundColor: AppColors.success, // Verde del botón "Pagar"
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
                 ),
@@ -297,7 +298,7 @@ class BannerCardModel {
 List<BannerCardModel> bannerCards = [
   BannerCardModel(
       text: "Asamblea General\nEste Viernes 18:00",
-      cardBackground: [const Color(0xFF2F3DBE), const Color(0xFF6A75E6)],
+      cardBackground: [AppColors.primary, const Color(0xFF6A75E6)],
       icon: Icons.groups),
   BannerCardModel(
       text: "Mantención Piscina\nCerrada por limpieza",

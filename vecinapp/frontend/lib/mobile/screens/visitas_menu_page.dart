@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 // Importamos la página que genera el QR
 import 'package:vecinapp/mobile/screens/generar_qr_visita.dart';
 // Importamos la página que escanea el QR
@@ -61,7 +62,7 @@ class _VisitasMenuPageState extends State<VisitasMenuPage> {
             Container(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 25),
               decoration: const BoxDecoration(
-                color: Color(0xFF2F3DBE),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
@@ -177,7 +178,7 @@ class _VisitasMenuPageState extends State<VisitasMenuPage> {
                     label: "Otros",
                     subtitle: "Casos especiales",
                     icon: Icons.more_horiz_outlined,
-                    color: const Color(0xFF2F3DBE),
+                    color: AppColors.primary,
                     onTap: () => _irAFormulario("Otros"),
                   ),
                 ],
@@ -209,7 +210,7 @@ class _VisitasMenuPageState extends State<VisitasMenuPage> {
               iconSize: 24,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color(0xFF2F3DBE),
+              tabBackgroundColor: AppColors.primary,
               color: Colors.grey[600],
               textStyle: GoogleFonts.lato(color: Colors.white),
               tabs: const [

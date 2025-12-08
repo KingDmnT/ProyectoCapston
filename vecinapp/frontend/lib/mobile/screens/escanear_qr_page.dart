@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
 
 class EscanearQrPage extends StatefulWidget {
   const EscanearQrPage({super.key});
@@ -15,7 +16,7 @@ class _EscanearQrPageState extends State<EscanearQrPage> {
     detectionSpeed: DetectionSpeed.noDuplicates,
   );
 
-  final Color azulCorporativo = const Color(0xFF2F3DBE);
+  
   bool _isScanCompleted = false; 
 
   void _onDetect(BarcodeCapture capture) {
@@ -74,7 +75,7 @@ class _EscanearQrPageState extends State<EscanearQrPage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: azulCorporativo,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -143,7 +144,7 @@ class _EscanearQrPageState extends State<EscanearQrPage> {
               width: 250,
               height: 250,
               decoration: BoxDecoration(
-                border: Border.all(color: azulCorporativo, width: 3),
+                border: Border.all(color: AppColors.primary, width: 3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(

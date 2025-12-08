@@ -115,21 +115,58 @@ class _DashboardTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Hola, $nombre",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hola, $nombre",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white
+                        ),
                       ),
+                      const Text(
+                        'Tu Condominio',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                // Campana de notificaciones
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                      onPressed: () => _showNotifications(context),
                     ),
-                    const Text(
-                      'Tu Condominio',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
+                    // Badge con número de notificaciones
+                    if (_notificaciones.isNotEmpty)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            '${_notificaciones.length}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -190,7 +227,7 @@ class _DashboardTab extends StatelessWidget {
                   onTap: () {
                     Navigator.pushNamed(context, '/mobile/reservas');
                   },
-                ),
+                ),/*
                 _QuickActionButton(
                   icon: Icons.videocam_outlined,
                   label: "Cámaras",
@@ -207,7 +244,7 @@ class _DashboardTab extends StatelessWidget {
                       const SnackBar(content: Text('Cartola - En desarrollo')),
                     );
                   },
-                ),
+                ),*/
                 _QuickActionButton(
                   icon: Icons.credit_card,
                   label: "Mis datos",
@@ -224,6 +261,184 @@ class _DashboardTab extends StatelessWidget {
       ),
     );
   }
+}
+
+// Notificaciones de ejemplo (local, a futuro será Firebase)
+final List<Map<String, dynamic>> _notificaciones = [
+  {
+    'titulo': 'Asamblea General',
+    'descripcion': 'Se realizará la asamblea general este viernes a las 18:00 hrs',
+    'fecha': '2 días ago',
+    'icono': Icons.groups,
+    'leida': false,
+  },
+  {
+    'titulo': 'Mantención Piscina',
+    'descripcion': 'La piscina estará cerrada por limpieza el día sábado',
+    'fecha': '1 semana ago',
+    'icono': Icons.pool,
+    'leida': false,
+  },
+  {
+    'titulo': 'Nuevo Gasto Común',
+    'descripcion': 'Ya está disponible el gasto común de este mes',
+    'fecha': '3 días ago',
+    'icono': Icons.attach_money,
+    'leida': true,
+  },
+];
+
+// Función para mostrar notificaciones
+void _showNotifications(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header del modal
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications, color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Notificaciones',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          // Lista de notificaciones
+          Expanded(
+            child: _notificaciones.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No tienes notificaciones',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _notificaciones.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final notif = _notificaciones[index];
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: notif['leida'] ? Colors.grey[50] : AppColors.primary.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: notif['leida'] ? Colors.grey[200]! : AppColors.primary.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                notif['icono'],
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          notif['titulo'],
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: notif['leida'] ? Colors.grey[600] : AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      if (!notif['leida'])
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    notif['descripcion'],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    notif['fecha'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // Tab de menú con opciones del residente
@@ -398,7 +613,7 @@ class _GastoComunCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
                 ),
                 child: const Text(
-                  "Pagar",
+                  "Ver Detalles",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -441,7 +656,7 @@ class _NewsCarousel extends StatelessWidget {
   final List<Map<String, dynamic>> news = const [
     {
       'text': 'Asamblea General\nEste Viernes 18:00',
-      'colors': [Color(0xFF2F3DBE), Color(0xFF6A75E6)],
+      'colors': [AppColors.primary, Color(0xFF6A75E6)],
       'icon': Icons.groups,
     },
     {
@@ -459,6 +674,7 @@ class _NewsCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      width: double.infinity,
       height: 140,
       child: CarouselSlider.builder(
         itemCount: news.length,
@@ -482,7 +698,7 @@ class _NewsCarousel extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(13),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
