@@ -62,6 +62,7 @@ class UserService {
         'password': password,
         'rut': rut,
         if (phone != null) 'phone': phone,
+        if (role != null) 'role': role,
       });
 
       return AppUser.fromJson(response);
@@ -78,6 +79,7 @@ class UserService {
     String? lastName,
     String? phone,
     String? rut,
+    String? role,
   }) async {
     try {
       final data = <String, dynamic>{};
@@ -85,6 +87,7 @@ class UserService {
       if (lastName != null) data['last_name'] = lastName;
       if (phone != null) data['phone'] = phone;
       if (rut != null) data['rut'] = rut;
+      if (role != null) data['role'] = role;
 
       final response = await _apiService.put('/users/$userId', data);
       return AppUser.fromJson(response);
@@ -109,7 +112,7 @@ class UserService {
     required String userId,
     required String communityId,
     required String unitId,
-    List<String> roles = const ['Residente'],
+    List<String> roles = const ['resident'],  // FIX: lowercase 'resident'
   }) async {
     try {
       final response = await _apiService.post(
@@ -128,7 +131,8 @@ class UserService {
     }
   }
 
-  /// Desasignar usuario de una comunidad
+
+  /// Desasignar usuario de una comunidad (TODAS las unidades)
   Future<AppUser> unassignUserFromCommunity({
     required String userId,
     required String communityId,
@@ -141,6 +145,24 @@ class UserService {
       return AppUser.fromJson(response);
     } catch (e) {
       print('Error en unassignUserFromCommunity: $e');
+      rethrow;
+    }
+  }
+
+  /// Desasignar usuario de una unidad específica
+  Future<AppUser> unassignUserFromUnit({
+    required String userId,
+    required String communityId,
+    required String unitId,
+  }) async {
+    try {
+      final response = await _apiService.delete(
+        '/users/$userId/unassign-unit/$communityId/$unitId',
+      );
+
+      return AppUser.fromJson(response);
+    } catch (e) {
+      print('Error en unassignUserFromUnit: $e');
       rethrow;
     }
   }
