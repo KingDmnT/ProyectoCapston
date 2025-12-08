@@ -41,7 +41,20 @@ def list_users(
     """
     Lista todos los usuarios registrados.
     Puede filtrar por community_id, rol y estado activo.
+    
+    Filtra automáticamente por comunidad para administradores no-super.
     """
+    # Auto-filtrar por comunidad si es admin de comunidad (no super admin)
+    user_memberships = current_user.get("memberships", [])
+    
+    # Si el admin tiene memberships y no es un filtro manual, aplicar filtro automático
+    if user_memberships and not community_id:
+        # Administradores de comunidad tienen solo 1 membership
+        # Super admin tiene múltiples memberships (acceso a todas)
+        # Solo filtrar si tiene exactamente 1 membership (admin de comunidad específica)
+        if len(user_memberships) == 1:
+            community_id = user_memberships[0].get("community_id")
+    
     return repo.get_all(
         community_id=community_id,
         role=role,
@@ -155,6 +168,7 @@ def assign_unit(
             detail=str(e)
         )
 
+
 @router.delete("/{user_id}/unassign-unit/{community_id}", response_model=User)
 def unassign_unit(
     user_id: str,
@@ -162,7 +176,7 @@ def unassign_unit(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Desasigna un usuario de una comunidad.
+    Desasigna un usuario de una comunidad (TODAS las unidades).
     Solo administradores pueden desasignar unidades.
     """
     # Verificar que sea admin
@@ -176,6 +190,43 @@ def unassign_unit(
         updated_user = repo.unassign_from_community(
             user_id=user_id,
             community_id=community_id
+        )
+        if not updated_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado"
+            )
+        return updated_user
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@router.delete("/{user_id}/unassign-unit/{community_id}/{unit_id}", response_model=User)
+def unassign_specific_unit(
+    user_id: str,
+    community_id: str,
+    unit_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Desasigna un usuario de UNA unidad específica.
+    Mantiene las otras unidades asignadas en la misma comunidad.
+    Solo administradores pueden desasignar unidades.
+    """
+    # Verificar que sea admin
+    if current_user.get("role") != "administrator":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo administradores pueden desasignar unidades"
+        )
+    
+    try:
+        updated_user = repo.unassign_from_unit(
+            user_id=user_id,
+            community_id=community_id,
+            unit_id=unit_id
         )
         if not updated_user:
             raise HTTPException(
