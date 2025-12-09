@@ -329,115 +329,125 @@ class _UsersScreenState extends State<UsersScreen> {
                         : _paginatedUsers.isEmpty
                             ? const Center(child: Text('No hay usuarios para mostrar'))
                             : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: SingleChildScrollView(
-                                  child: DataTable(
-                                    headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-                                    dataRowHeight: 60,
-                                    columns: const [
-                                      DataColumn(label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Email', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Rol', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Comunidad', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Unidades', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold))),
-                                    ],
-                                    rows: _paginatedUsers.map((user) {
-                                      final assignedUnits = user.memberships
-                                          .where((m) => m.unitNumber != null)
-                                          .map((m) => m.unitNumber!)
-                                          .toList();
-                                      
-                                      final membership = user.memberships.isNotEmpty 
-                                          ? user.memberships.first 
-                                          : null;
-                                      
-                                      return DataRow(cells: [
-                                        DataCell(Text(_getUserFullName(user), style: const TextStyle(fontWeight: FontWeight.w500))),
-                                        DataCell(Text(user.email)),
-                                        DataCell(Text(_getRoleDisplayName(user.role))),
-                                        DataCell(Text(membership?.communityName ?? '-')),
-                                        DataCell(
-                                          assignedUnits.isEmpty
-                                              ? const Text('-')
-                                              : Wrap(
-                                                  spacing: 4,
-                                                  runSpacing: 4,
-                                                  children: assignedUnits.map((unitNumber) {
-                                                    return Container(
-                                                      padding: const EdgeInsets.symmetric(
-                                                        horizontal: 6,
-                                                        vertical: 2,
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    return SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minWidth: constraints.maxWidth,
+                                        ),
+                                        child: DataTable(
+                                          headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
+                                          dataRowHeight: 60,
+                                          columnSpacing: 24,
+                                          columns: const [
+                                            DataColumn(label: Text('Nombre', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Email', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Rol', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Comunidad', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Unidades', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold))),
+                                            DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold))),
+                                          ],
+                                          rows: _paginatedUsers.map((user) {
+                                            final assignedUnits = user.memberships
+                                                .where((m) => m.unitNumber != null)
+                                                .map((m) => m.unitNumber!)
+                                                .toList();
+                                            
+                                            final membership = user.memberships.isNotEmpty 
+                                                ? user.memberships.first 
+                                                : null;
+                                            
+                                            return DataRow(cells: [
+                                              DataCell(Text(_getUserFullName(user), style: const TextStyle(fontWeight: FontWeight.w500))),
+                                              DataCell(Text(user.email)),
+                                              DataCell(Text(_getRoleDisplayName(user.role))),
+                                              DataCell(Text(membership?.communityName ?? '-')),
+                                              DataCell(
+                                                assignedUnits.isEmpty
+                                                    ? const Text('-')
+                                                    : Wrap(
+                                                        spacing: 4,
+                                                        runSpacing: 4,
+                                                        children: assignedUnits.map((unitNumber) {
+                                                          return Container(
+                                                            padding: const EdgeInsets.symmetric(
+                                                              horizontal: 6,
+                                                              vertical: 2,
+                                                            ),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.primary.withOpacity(0.1),
+                                                              borderRadius: BorderRadius.circular(8),
+                                                              border: Border.all(
+                                                                color: AppColors.primary.withOpacity(0.3),
+                                                                width: 0.5,
+                                                              ),
+                                                            ),
+                                                            child: Text(
+                                                              unitNumber,
+                                                              style: const TextStyle(
+                                                                fontSize: 10,
+                                                                fontWeight: FontWeight.w600,
+                                                                color: AppColors.primary,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }).toList(),
                                                       ),
-                                                      decoration: BoxDecoration(
-                                                        color: AppColors.primary.withOpacity(0.1),
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        border: Border.all(
-                                                          color: AppColors.primary.withOpacity(0.3),
-                                                          width: 0.5,
-                                                        ),
-                                                      ),
-                                                      child: Text(
-                                                        unitNumber,
-                                                        style: const TextStyle(
-                                                          fontSize: 10,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: AppColors.primary,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
+                                              ),
+                                              DataCell(
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: user.isActive ? Colors.green[50] : Colors.red[50],
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(
+                                                      color: user.isActive ? Colors.green[200]! : Colors.red[200]!,
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    user.isActive ? 'Activo' : 'Inactivo',
+                                                    style: TextStyle(
+                                                      color: user.isActive ? Colors.green[800] : Colors.red[800],
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                  ),
                                                 ),
-                                        ),
-                                        DataCell(
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: user.isActive ? Colors.green[50] : Colors.red[50],
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: user.isActive ? Colors.green[200]! : Colors.red[200]!,
                                               ),
-                                            ),
-                                            child: Text(
-                                              user.isActive ? 'Activo' : 'Inactivo',
-                                              style: TextStyle(
-                                                color: user.isActive ? Colors.green[800] : Colors.red[800],
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        DataCell(
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-                                                onPressed: () => _showUserDialog(user: user),
-                                                tooltip: 'Editar',
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  user.isActive ? Icons.block : Icons.check_circle,
-                                                  color: user.isActive ? Colors.red : Colors.green,
+                                              DataCell(
+                                                Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    IconButton(
+                                                      icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                                                      onPressed: () => _showUserDialog(user: user),
+                                                      tooltip: 'Editar',
+                                                    ),
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        user.isActive ? Icons.block : Icons.check_circle,
+                                                        color: user.isActive ? Colors.red : Colors.green,
+                                                      ),
+                                                      onPressed: () => _toggleUserStatus(user),
+                                                      tooltip: user.isActive ? 'Desactivar' : 'Activar',
+                                                    ),
+                                                    IconButton(
+                                                      icon: const Icon(Icons.lock_reset, color: AppColors.warning),
+                                                      onPressed: () => _resetPassword(user),
+                                                      tooltip: 'Reiniciar Contraseña',
+                                                    ),
+                                                  ],
                                                 ),
-                                                onPressed: () => _toggleUserStatus(user),
-                                                tooltip: user.isActive ? 'Desactivar' : 'Activar',
                                               ),
-                                              IconButton(
-                                                icon: const Icon(Icons.lock_reset, color: AppColors.warning),
-                                                onPressed: () => _resetPassword(user),
-                                                tooltip: 'Reiniciar Contraseña',
-                                              ),
-                                            ],
-                                          ),
+                                            ]);
+                                          }).toList(),
                                         ),
-                                      ]);
-                                    }).toList(),
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                   ),
