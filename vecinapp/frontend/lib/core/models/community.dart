@@ -15,6 +15,13 @@ class Community {
   final String? description;
   final String? contactEmail;
   final String? contactPhone;
+  
+  // Datos Bancarios
+  final String? bankName;
+  final String? bankAccountType;
+  final String? bankAccountNumber;
+  final String? bankAccountRut;
+  final String? bankAccountEmail;
 
   Community({
     required this.id,
@@ -31,6 +38,11 @@ class Community {
     this.description,
     this.contactEmail,
     this.contactPhone,
+    this.bankName,
+    this.bankAccountType,
+    this.bankAccountNumber,
+    this.bankAccountRut,
+    this.bankAccountEmail,
   });
 
   factory Community.fromJson(Map<String, dynamic> json) {
@@ -49,6 +61,11 @@ class Community {
       description: json['description'],
       contactEmail: json['contact_email'],
       contactPhone: json['contact_phone'],
+      bankName: json['bank_name'],
+      bankAccountType: json['bank_account_type'],
+      bankAccountNumber: json['bank_account_number'],
+      bankAccountRut: json['bank_account_rut'],
+      bankAccountEmail: json['bank_account_email'],
     );
   }
 
@@ -66,6 +83,11 @@ class Community {
       'description': description,
       'contact_email': contactEmail,
       'contact_phone': contactPhone,
+      'bank_name': bankName,
+      'bank_account_type': bankAccountType,
+      'bank_account_number': bankAccountNumber,
+      'bank_account_rut': bankAccountRut,
+      'bank_account_email': bankAccountEmail,
     };
   }
 }

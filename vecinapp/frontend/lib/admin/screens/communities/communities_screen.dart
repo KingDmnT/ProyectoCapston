@@ -319,6 +319,11 @@ class _CommunityDialogState extends State<_CommunityDialog> {
   late TextEditingController _descriptionController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _bankNameController;
+  late TextEditingController _bankAccountTypeController;
+  late TextEditingController _bankAccountNumberController;
+  late TextEditingController _bankAccountRutController;
+  late TextEditingController _bankAccountEmailController;
   DateTime? _fechaEntrega;
 
   // Dropdowns
@@ -341,6 +346,11 @@ class _CommunityDialogState extends State<_CommunityDialog> {
     _descriptionController = TextEditingController(text: c?.description ?? '');
     _emailController = TextEditingController(text: c?.contactEmail ?? '');
     _phoneController = TextEditingController(text: c?.contactPhone ?? '');
+    _bankNameController = TextEditingController(text: c?.bankName ?? '');
+    _bankAccountTypeController = TextEditingController(text: c?.bankAccountType ?? '');
+    _bankAccountNumberController = TextEditingController(text: c?.bankAccountNumber ?? '');
+    _bankAccountRutController = TextEditingController(text: c?.bankAccountRut ?? '');
+    _bankAccountEmailController = TextEditingController(text: c?.bankAccountEmail ?? '');
     
     if (c?.fechaEntregaInicial != null) {
       try {
@@ -410,6 +420,11 @@ class _CommunityDialogState extends State<_CommunityDialog> {
         description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
         contactEmail: _emailController.text.isEmpty ? null : _emailController.text,
         contactPhone: _phoneController.text.isEmpty ? null : _phoneController.text,
+        bankName: _bankNameController.text.isEmpty ? null : _bankNameController.text,
+        bankAccountType: _bankAccountTypeController.text.isEmpty ? null : _bankAccountTypeController.text,
+        bankAccountNumber: _bankAccountNumberController.text.isEmpty ? null : _bankAccountNumberController.text,
+        bankAccountRut: _bankAccountRutController.text.isEmpty ? null : _bankAccountRutController.text,
+        bankAccountEmail: _bankAccountEmailController.text.isEmpty ? null : _bankAccountEmailController.text,
         fechaEntregaInicial: _fechaEntrega != null ? DateFormat('yyyy-MM-dd').format(_fechaEntrega!) : null,
       );
 
@@ -652,6 +667,72 @@ class _CommunityDialogState extends State<_CommunityDialog> {
                   controller: _descriptionController,
                   decoration: const InputDecoration(labelText: 'Descripción'),
                   maxLines: 3,
+                ),
+                
+                const SizedBox(height: 24),
+                // Sección 4: Datos Bancarios
+                Text('Datos Bancarios para Transferencias', style: Theme.of(context).textTheme.titleMedium),
+                const Divider(),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _bankNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre del Banco',
+                          hintText: 'Ej: Banco Estado',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _bankAccountTypeController.text.isEmpty ? null : _bankAccountTypeController.text,
+                        decoration: const InputDecoration(labelText: 'Tipo de Cuenta'),
+                        items: const [
+                          DropdownMenuItem(value: 'Cuenta Corriente', child: Text('Cuenta Corriente')),
+                          DropdownMenuItem(value: 'Cuenta Vista', child: Text('Cuenta Vista')),
+                          DropdownMenuItem(value: 'Cuenta de Ahorro', child: Text('Cuenta de Ahorro')),
+                        ],
+                        onChanged: (value) => setState(() => _bankAccountTypeController.text = value ?? ''),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _bankAccountNumberController,
+                        decoration: const InputDecoration(
+                          labelText: 'Número de Cuenta',
+                          hintText: 'Sin guiones ni espacios',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _bankAccountRutController,
+                        decoration: const InputDecoration(
+                          labelText: 'RUT Titular',
+                          hintText: '12345678-9',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _bankAccountEmailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email para Comprobantes',
+                    hintText: 'Email donde se recibirán los comprobantes de pago',
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
               ],
             ),
