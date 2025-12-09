@@ -11,6 +11,8 @@ services:
       # Montamos las credenciales para que el contenedor tenga acceso
       - ./credentials:/app/credentials
       - ./backend/app:/app/app
+      # Montamos los assets del frontend para acceder al logo
+      - ./frontend/assets:/app/frontend/assets:ro
     environment:
       # Configuramos la ruta de credenciales para Docker
       - FIREBASE_CREDENTIALS_PATH=/app/credentials/serviceAccountKey.json
