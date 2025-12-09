@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:vecinapp/core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
+import 'package:vecinapp/core/theme/app_theme.dart';
+import 'package:vecinapp/core/models/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vecinapp/core/services/common_expense_service.dart';
+import 'package:vecinapp/mobile/screens/my_expenses_page.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 // Pantalla principal móvil (para residentes)
 class MobileHomePage extends StatefulWidget {
@@ -250,6 +256,18 @@ class _DashboardTab extends StatelessWidget {
                   label: "Mis datos",
                   onTap: () {
                     Navigator.pushNamed(context, '/mobile/perfil');
+                  },
+                ),
+                _QuickActionButton(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: "Gastos Comunes",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyExpensesPage(),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -566,15 +584,151 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-// Tarjeta de gasto común
-class _GastoComunCard extends StatelessWidget {
+// Tarjeta de gasto común con datos reales
+class _GastoComunCard extends StatefulWidget {
+  @override
+  State<_GastoComunCard> createState() => _GastoComunCardState();
+}
+
+class _GastoComunCardState extends State<_GastoComunCard> {
+  Map<String, dynamic>? _latestExpense;
+  bool _loading = true;
+  String? _error;
+  String? _communityId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestExpense();
+  }
+
+  Future<void> _loadLatestExpense() async {
+    try {
+      final authService = AuthService();
+      final user = authService.currentUser;
+      
+      if (user == null) {
+        setState(() {
+          _error = 'Usuario no autenticado';
+          _loading = false;
+        });
+        return;
+      }
+
+      // Obtener community_id del usuario
+      // El usuario tiene un campo communityId en Firestore
+      final db = FirebaseFirestore.instance;
+      final userDoc = await db.collection('users').doc(user.uid).get();
+      
+      if (!userDoc.exists) {
+        setState(() {
+          _error = 'Usuario no encontrado';
+          _loading = false;
+        });
+        return;
+      }
+
+      final userData = userDoc.data();
+      final communityId = userData?['communityId'] as String?;
+      
+      if (communityId == null || communityId.isEmpty) {
+        setState(() {
+          _error = 'Usuario sin comunidad asignada';
+          _loading = false;
+        });
+        return;
+      }
+      
+      final service = CommonExpenseService();
+      final expense = await service.getLatestExpense(communityId: communityId);
+      
+      setState(() {
+        _latestExpense = expense;
+        _loading = false;
+      });
+    } catch (e) {
+      print('Error cargando gasto común: $e');
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        width: double.infinity,
+        height: 150,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    if (_error != null || _latestExpense == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline, color: Colors.grey),
+            const SizedBox(height: 10),
+            Text(
+              _error != null 
+                  ? 'Error al cargar el gasto común'
+                  : 'No hay gastos comunes disponibles',
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Datos del gasto común
+    final amount = (_latestExpense!['total_amount'] ?? 0).toDouble();
+    final period = _latestExpense!['period'] ?? '';
+    final month = _latestExpense!['month'] ?? 1;
+    final year = _latestExpense!['year'] ?? 2025;
+    final status = _latestExpense!['status'] ?? 'draft';
+
+    // Calcular fecha de vencimiento (asumiendo día 28 del mes siguiente)
+    int dueMonth = month == 12 ? 1 : month + 1;
+    int dueYear = month == 12 ? year + 1 : year;
+    final dueDate = DateTime(dueYear, dueMonth, 28);
+    final dueDateStr = '${dueDate.day}-${dueDate.month.toString().padLeft(2, '0')}-${dueDate.year}';
+
+    // Determinar si está vencido
+    final now = DateTime.now();
+    final isOverdue = now.isAfter(dueDate) && (status == 'closed' || status == 'notified');
+    final isCurrent = !isOverdue && (status == 'closed' || status == 'notified');
+
+    // Color del card según estado
+    final cardColor = isOverdue 
+        ? AppColors.error 
+        : (isCurrent ? AppColors.primary : Colors.grey[600]);
+
+    // Texto de estado
+    final statusText = isOverdue 
+        ? 'VENCIDO' 
+        : (isCurrent ? 'AL DÍA' : 'EN PREPARACIÓN');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
@@ -587,24 +741,52 @@ class _GastoComunCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Tu total a pagar es de",
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Tu total a pagar es de",
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              // Badge de estado
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  statusText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 5),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "\$ 45.593",
-                style: TextStyle(
+              Text(
+                "\$ ${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}",
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyExpensesPage(),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
                   shape: RoundedRectangleBorder(
@@ -625,23 +807,59 @@ class _GastoComunCard extends StatelessWidget {
           const SizedBox(height: 15),
           Divider(color: Colors.grey[700]),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Gasto común diciembre 2025",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Gasto común $period",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      "Vencimiento: $dueDateStr",
+                      style: const TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
+                  ],
                 ),
               ),
-              Icon(Icons.download_rounded, color: Colors.white70)
+              // Botón de descarga
+              IconButton(
+                onPressed: () async {
+                  try {
+                    if (_latestExpense != null && _communityId != null) {
+                      final expenseId = _latestExpense!['id'] as String;
+                      final baseUrl = 'http://localhost:8000'; // TODO: Obtener de configuración
+                      final pdfUrl = '$baseUrl/common-expenses/my-expenses/$expenseId/pdf?community_id=$_communityId';
+                      
+                      final uri = Uri.parse(pdfUrl);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('No se pudo abrir el PDF')),
+                          );
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.download_rounded, color: Colors.white70, size: 28),
+              ),
             ],
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            "Vencimiento: 28-12-2025",
-            style: TextStyle(color: Colors.white38, fontSize: 12),
           ),
         ],
       ),

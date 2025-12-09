@@ -4,3 +4,6 @@ firebase-admin==6.4.0
 python-dotenv==1.0.1
 email-validator
 pytz
+reportlab==4.0.9
+Pillow==10.2.0
+qrcode==7.4.2

@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import auth
 from app.core.firebase import get_db
+from typing import Optional
 
 # Esquema de seguridad: Bearer Token
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
@@ -64,3 +66,21 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail=f"Error de autenticación: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional)
+) -> Optional[dict]:
+    """
+    Versión opcional de get_current_user que retorna None si no hay credenciales.
+    Útil para endpoints que aceptan tanto autenticación como otros métodos (ej: tokens temporales).
+    
+    Retorna:
+        Optional[dict]: Datos del usuario o None si no hay autenticación
+    """
+    if credentials is None:
+        return None
+    
+    try:
+        return get_current_user(credentials)
+    except HTTPException:
+        return None
