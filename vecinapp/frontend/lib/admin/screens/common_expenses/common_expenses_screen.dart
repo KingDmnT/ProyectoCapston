@@ -502,8 +502,8 @@ class _CommonExpensesScreenState extends State<CommonExpensesScreen> {
                             : _paginatedExpenses.isEmpty
                                 ? const Center(child: Text('No hay gastos comunes para mostrar'))
                                 : SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: SingleChildScrollView(
+                                    child: SizedBox(
+                                      width: double.infinity,
                                       child: DataTable(
                                         headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
                                         dataRowHeight: 70,
