@@ -1,0 +1,49 @@
+    def unassign_from_unit(self, user_id: str, community_id: str, unit_id: str) -> Optional[User]:
+        """
+        Desasigna un usuario de UNA unidad específica.
+        Elimina la memberships correspondiente y libera la unidad.
+        """
+        user_ref = self.collection.document(user_id)
+        user_doc = user_ref.get()
+        
+        if not user_doc.exists:
+            return None
+        
+        user_data = user_doc.to_dict()
+        memberships = user_data.get('memberships', [])
+        
+        # Encontrar y ELIMINAR la membership de esta unidad específica
+        membership_to_remove = None
+        new_memberships = []
+        
+        for membership in memberships:
+            if (membership.get('community_id') == community_id and 
+                membership.get('unit_id') == unit_id):
+                # Esta es la que queremos eliminar
+                membership_to_remove = membership
+            else:
+                # Mantener las demás
+                new_memberships.append(membership)
+        
+        if not membership_to_remove:
+            # No se encontró esa membership
+            return self.get_by_id(user_id)
+        
+        # Actualizar usuario con memberships filtradas
+        user_ref.update({
+            memberships': new_memberships,
+            'updated_at': datetime.now()
+        })
+        
+        # Liberar la unidad
+        community_ref = self.db.collection('communities').document(community_id)
+        unit_ref = community_ref.collection('units').document(unit_id)
+        unit_ref.update({
+            'is_occupied': False,
+            'status': 'Disponible',
+            'resident_uid': None,
+            'resident_name': None,
+            'updated_at': datetime.now()
+        })
+        
+        return self.get_by_id(user_id)

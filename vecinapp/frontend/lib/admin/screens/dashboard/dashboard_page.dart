@@ -5,6 +5,7 @@ import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/admin/screens/communities/communities_screen.dart';
 import 'package:vecinapp/admin/screens/users/users_screen.dart';
 import 'package:vecinapp/admin/screens/maintenance/maintenance_screen.dart';
+import 'package:vecinapp/admin/screens/common_expenses/common_expenses_screen.dart';
 
 // Dashboard principal del administrador (backoffice web)
 class AdminDashboardPage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     const CommunitiesScreen(),
     const UsersScreen(),
     const MaintenanceScreen(),
+    const CommonExpensesScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
   ];
   
@@ -31,6 +33,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     "Gestión de Comunidades",
     "Gestión de Usuarios",
     "Gestión de Mantenimientos",
+    "Gestión de Gastos Comunes",
     "Gestión de Visitas"
   ];
 
@@ -103,6 +106,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icon(Icons.build_outlined),
                 selectedIcon: Icon(Icons.build, color: AppColors.primary),
                 label: Text('Mantenimiento'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long, color: AppColors.primary),
+                label: Text('Gastos Comunes'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.qr_code_scanner_outlined),

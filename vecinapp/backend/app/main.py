@@ -10,6 +10,7 @@ from app.api import units
 from app.api import users
 from app.api import visits
 from app.api import maintenance
+from app.api import common_expense
 
 app = FastAPI(
     title="Condominio System API",
@@ -56,6 +57,9 @@ app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Módulo de Mantenimiento
 app.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
+
+# Módulo de Gastos Comunes
+app.include_router(common_expense.router, prefix="/common-expenses", tags=["Common Expenses"])
 
 # --- Health Check ---
 @app.get("/")
