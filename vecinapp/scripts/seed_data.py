@@ -108,7 +108,13 @@ def create_community_with_units(name, address, comuna, region, floors=4, units_p
         "comuna": comuna,
         "region": region,
         "is_active": True,
-        "created_at": datetime.now()
+        "created_at": datetime.now(),
+        # Datos Bancarios ficticios
+        "bank_name": "Banco Estado",
+        "bank_account_type": "Cuenta Corriente",
+        "bank_account_number": f"{random.randint(10000000, 99999999)}",
+        "bank_account_rut": "76.000.000-0",  # RUT genérico de empresa
+        "bank_account_email": "admin@vecinapp.cl",
     }
     community_ref.set(community_data)
     print(f"✅ Comunidad creada: {name} (ID: {community_id})")
@@ -381,6 +387,11 @@ def seed_complete_data():
     # ========================================
     seed_maintenances(comm1_id, comm1_data['name'], comm2_id, comm2_data['name'])
     
+    # ========================================
+    # 5. CREAR GASTOS COMUNES
+    # ========================================
+    seed_common_expenses(comm1_id, comm1_data['name'], comm2_id, comm2_data['name'], super_admin_uid)
+    
     print("\n" + "="*60)
     print("🔐 CREDENCIALES:")
     print("\n   👑 SUPER ADMIN:")
@@ -562,6 +573,185 @@ def seed_maintenances(comm1_id, comm1_name, comm2_id, comm2_name):
     
     print(f"\n✅ 8 mantenimientos creados (4 por comunidad)")
     print(f"   Total mensual por comunidad: $920.000")
+
+def seed_common_expenses(comm1_id, comm1_name, comm2_id, comm2_name, admin_uid):
+    """Crea gastos comunes de ejemplo para ambas comunidades"""
+    print("\n💰 Creando gastos comunes...\n")
+    
+    from datetime import timedelta
+    today = datetime.now()
+    current_month = today.month
+    current_year = today.year
+    
+    # Mes pasado
+    if current_month == 1:
+        last_month = 12
+        last_year = current_year - 1
+    else:
+        last_month = current_month - 1
+        last_year = current_year
+    
+    month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    
+    def create_common_expense(community_id, community_name, month, year, status_val, closed_by=None):
+        """Helper para crear un gasto común"""
+        period = f"{year}-{month:02d}"
+        period_display = f"{month_names[month-1]} {year}"
+        
+        # Items por categoría
+        items = {
+            'remuneraciones': [
+                {
+                    'description': 'Sueldo Conserje',
+                    'amount': 550000,
+                    'doc_number': '12345',
+                    'date': datetime(year, month, 5).isoformat(),
+                },
+                {
+                    'description': 'Honorarios Administrador',
+                    'amount': 350000,
+                    'doc_number': '12346',
+                    'date': datetime(year, month, 5).isoformat(),
+                },
+            ],
+            'gastos_extraordinarios': [
+                {
+                    'description': 'Reparación Portón Eléctrico',
+                    'amount': 90000,
+                    'doc_number': '98765',
+                    'date': datetime(year, month, 15).isoformat(),
+                },
+            ],
+            'mantencion': [
+                {
+                    'description': f'Mantenimiento Piscina {period_display}',
+                    'amount': 200000,
+                    'doc_number': None,
+                    'date': None,
+                    'maintenance_ids': [],
+                },
+                {
+                    'description': f'Mantenimiento Jardines {period_display}',
+                    'amount': 450000,
+                    'doc_number': None,
+                    'date': None,
+                    'maintenance_ids': [],
+                },
+            ],
+            'servicios_comunes': [
+                {
+                    'description': 'Electricidad Áreas Comunes',
+                    'amount': 180000,
+                    'doc_number': '55512',
+                    'date': datetime(year, month, 20).isoformat(),
+                },
+                {
+                    'description': 'Agua Potable',
+                    'amount': 120000,
+                    'doc_number': '55513',
+                    'date': datetime(year, month, 20).isoformat(),
+                },
+            ],
+        }
+        
+        # Calcular total
+        total_amount = sum(
+            sum(item['amount'] for item in category_items)
+            for category_items in items.values()
+        )
+        
+        # Obtener unidades de la comunidad para calcular distribución
+        units_ref = db.collection('communities').document(community_id).collection('units')
+        units_docs = list(units_ref.stream())
+        
+        # Obtener usuarios
+        users_ref = db.collection('users')
+        users_docs = list(users_ref.stream())
+        users_map = {doc.id: doc.to_dict() for doc in users_docs}
+        
+        # Calcular unit_expenses si está cerrado o notificado
+        unit_expenses = []
+        if status_val in ['closed', 'notified']:
+            for unit_doc in units_docs:
+                unit_data = unit_doc.to_dict()
+                unit_id = unit_doc.id
+                unit_name = unit_data.get('name', '')
+                alicuota = unit_data.get('alicuota', 0.0)
+                
+                # Calcular monto para esta unidad
+                unit_amount = total_amount * (alicuota / 100.0)
+                
+                # Buscar residente
+                resident_uid = unit_data.get('resident_uid')
+                resident_name = None
+                resident_email = None
+                
+                if resident_uid and resident_uid in users_map:
+                    user_data = users_map[resident_uid]
+                    first_name = user_data.get('first_name', '')
+                    last_name = user_data.get('last_name', '')
+                    resident_name = f"{first_name} {last_name}".strip() or user_data.get('name', 'Residente')
+                    resident_email = user_data.get('email')
+                
+                unit_expenses.append({
+                    'unit_id': unit_id,
+                    'unit_name': unit_name,
+                    'alicuota': alicuota,
+                    'amount': unit_amount,
+                    'resident_uid': resident_uid,
+                    'resident_name': resident_name,
+                    'resident_email': resident_email,
+                    'pdf_url': None,
+                })
+        
+        # Crear documento
+        expense_data = {
+            'community_id': community_id,
+            'period': period,
+            'month': month,
+            'year': year,
+            'status': status_val,
+            'total_amount': total_amount,
+            'items': items,
+            'unit_expenses': unit_expenses,
+            'closed_by': closed_by if status_val in ['closed', 'notified'] else None,
+            'closed_at': datetime.now() if status_val in ['closed', 'notified'] else None,
+            'created_by': admin_uid,
+            'created_at': datetime.now(),
+            'updated_at': datetime.now(),
+        }
+        
+        # Guardar en Firestore
+        expense_ref = db.collection('communities').document(community_id)\
+            .collection('common_expenses').document()
+        expense_data['id'] = expense_ref.id
+        expense_ref.set(expense_data)
+        
+        status_label = {
+            'draft': 'BORRADOR',
+            'closed': 'CERRADO',
+            'notified': 'NOTIFICADO'
+        }[status_val]
+        
+        print(f"   ✓ Gasto común {period_display}: ${total_amount:,.0f} [{status_label}]")
+        return expense_ref.id
+    
+    # Crear gastos comunes para Comunidad 1
+    print(f"📍 {comm1_name}:")
+    # Gasto del mes pasado (notificado)
+    create_common_expense(comm1_id, comm1_name, last_month, last_year, 'notified', admin_uid)
+    # Gasto del mes actual (cerrado, listo para notificar)
+    create_common_expense(comm1_id, comm1_name, current_month, current_year, 'closed', admin_uid)
+    
+    # Crear gastos comunes para Comunidad 2
+    print(f"\n📍 {comm2_name}:")
+    create_common_expense(comm2_id, comm2_name, last_month, last_year, 'notified', admin_uid)
+    create_common_expense(comm2_id, comm2_name, current_month, current_year, 'closed', admin_uid)
+    
+    print(f"\n✅ 4 gastos comunes creados (2 por comunidad)")
+    print(f"   - Mes pasado: NOTIFICADO (enviado a residentes)")
+    print(f"   - Mes actual: CERRADO (listo para notificar)")
 
 if __name__ == "__main__":
     seed_complete_data()
