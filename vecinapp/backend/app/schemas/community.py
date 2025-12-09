@@ -20,6 +20,13 @@ class CommunityBase(BaseModel):
     description: Optional[str] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
+    
+    # Datos Bancarios para transferencias
+    bank_name: Optional[str] = None  # Nombre del banco
+    bank_account_type: Optional[str] = None  # "Cuenta Corriente" o "Cuenta Vista"
+    bank_account_number: Optional[str] = None  # Número de cuenta
+    bank_account_rut: Optional[str] = None  # RUT del titular de la cuenta
+    bank_account_email: Optional[str] = None  # Email para comprobantes
 
 class CommunityCreate(CommunityBase):
     pass
