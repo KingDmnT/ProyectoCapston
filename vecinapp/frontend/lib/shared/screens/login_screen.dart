@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const Spacer(),
-                        const Icon(Icons.apartment_rounded, size: 70, color: Colors.white),
+                        Image.asset('assets/images/Logo.png', height: 100, width: 100),
                         const SizedBox(height: 10),
                         const Text(
                           "Bienvenido",
@@ -135,16 +135,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (isWeb) ...[
                   // HEADER PARA WEB
                   const SizedBox(height: 40),
-                  const Icon(Icons.apartment_rounded, size: 80, color: AppColors.primary),
+                  Image.asset('assets/images/Logo.png', height: 120, width: 120),
                   const SizedBox(height: 20),
-                  const Text(
-                    "VecinApp",
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
                   const SizedBox(height: 8),
                   const Text(
                     "Ingresa a tu comunidad",
