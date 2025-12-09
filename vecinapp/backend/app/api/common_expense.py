@@ -208,8 +208,8 @@ def notify_residents(
         )
     
     # Obtener datos de la comunidad
-    from google.cloud import firestore
-    db = firestore.Client()
+    from app.core.firebase import get_db
+    db = get_db()
     community_doc = db.collection('communities').document(community_id).get()
     if not community_doc.exists:
         raise HTTPException(
@@ -219,7 +219,9 @@ def notify_residents(
     community_data = community_doc.to_dict()
     
     # Preparar datos para emails
-    recipients = []
+    # Primero, agrupar unidades por residente
+    resident_units = {}  # {email: {'name': str, 'units': [unit_name], 'amount': total, 'pdf_path': str}}
+    
     temp_dir = tempfile.mkdtemp()
     
     try:
@@ -227,7 +229,33 @@ def notify_residents(
             if not unit_expense.resident_email:
                 continue  # Saltar unidades sin residente o sin email
             
-            # Generar PDF para esta unidad
+            email = unit_expense.resident_email
+            
+            # Agrupar por residente
+            if email not in resident_units:
+                resident_units[email] = {
+                    'name': unit_expense.resident_name or 'Residente',
+                    'units': [],
+                    'amount': 0,
+                    'pdf_paths': []
+                }
+            
+            resident_units[email]['units'].append(unit_expense.unit_name)
+            resident_units[email]['amount'] += unit_expense.amount
+        
+        # Generar PDFs y preparar emails
+        recipients = []
+        month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+        period_str = f"{month_names[expense.month-1]} {expense.year}"
+        
+        for unit_expense in expense.unit_expenses:
+            if not unit_expense.resident_email:
+                continue
+            
+            email = unit_expense.resident_email
+            
+            # Generar PDF para esta unidad específica
             pdf_filename = f"gasto_comun_{expense.period}_{unit_expense.unit_name}.pdf"
             pdf_path = os.path.join(temp_dir, pdf_filename)
             
@@ -238,18 +266,15 @@ def notify_residents(
                 output_path=pdf_path
             )
             
-            # Preparar datos para email
-            month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-                          'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-            period_str = f"{month_names[expense.month-1]} {expense.year}"
-            
+            # Preparar datos para email (uno por unidad, pero con info de todas las unidades del residente)
             recipients.append({
-                'to_email': unit_expense.resident_email,
-                'to_name': unit_expense.resident_name or 'Residente',
+                'to_email': email,
+                'to_name': resident_units[email]['name'],
                 'community_name': community_data.get('name', 'Comunidad'),
                 'period': period_str,
-                'amount': unit_expense.amount,
-                'pdf_path': pdf_path
+                'amount': unit_expense.amount,  # Monto de esta unidad específica
+                'pdf_path': pdf_path,
+                'unit_numbers': [unit_expense.unit_name]  # Solo esta unidad en este PDF
             })
         
         # Enviar emails masivos
@@ -306,8 +331,8 @@ def download_pdf(
         )
     
     # Obtener datos de la comunidad
-    from google.cloud import firestore
-    db = firestore.Client()
+    from app.core.firebase import get_db
+    db = get_db()
     community_doc = db.collection('communities').document(community_id).get()
     if not community_doc.exists:
         raise HTTPException(

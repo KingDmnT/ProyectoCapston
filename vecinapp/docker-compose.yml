@@ -13,6 +13,8 @@ services:
       - ./backend/app:/app/app
       # Montamos los assets del frontend para acceder al logo
       - ./frontend/assets:/app/frontend/assets:ro
+    env_file:
+      - ./backend/.env
     environment:
       # Configuramos la ruta de credenciales para Docker
       - FIREBASE_CREDENTIALS_PATH=/app/credentials/serviceAccountKey.json

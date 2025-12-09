@@ -5,6 +5,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -25,7 +26,8 @@ def send_common_expense_email(
     community_name: str,
     period: str,
     amount: float,
-    pdf_path: str
+    pdf_path: str,
+    unit_numbers: list = None
 ) -> bool:
     """
     Envía email con PDF de gasto común adjunto.
@@ -37,6 +39,7 @@ def send_common_expense_email(
         period: Período del gasto (ej: "diciembre 2025")
         amount: Monto a pagar
         pdf_path: Ruta del PDF a adjuntar
+        unit_numbers: Lista de números de unidad (ej: ["101", "205"])
     
     Returns:
         True si se envió exitosamente, False en caso contrario
@@ -48,50 +51,98 @@ def send_common_expense_email(
     
     try:
         # Crear mensaje
-        msg = MIMEMultipart()
+        msg = MIMEMultipart('related')
         msg['From'] = f'{FROM_NAME} <{FROM_EMAIL}>'
         msg['To'] = to_email
         msg['Subject'] = f'Gasto Común {period} - {community_name}'
         
+        # Formatear números de unidad
+        units_text = ""
+        if unit_numbers and len(unit_numbers) > 0:
+            if len(unit_numbers) == 1:
+                units_text = f"<p style=\"color: #666;\"><strong>Unidad:</strong> {unit_numbers[0]}</p>"
+            else:
+                units_list = ", ".join(unit_numbers)
+                units_text = f"<p style=\"color: #666;\"><strong>Unidades:</strong> {units_list}</p>"
+        
         # Cuerpo del email en HTML
         html_body = f"""
         <html>
-          <body style="font-family: Arial, sans-serif; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #4ECDC4;">Gasto Común {period}</h2>
+          <body style="font-family: Arial, sans-serif; color: #333; background-color: #f9f9f9; margin: 0; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               
-              <p>Estimado/a <strong>{to_name}</strong>,</p>
+              <!-- Header con logo -->
+              <div style="background: linear-gradient(135deg, #7B4FFF 0%, #6A3DE8 100%); padding: 30px; text-align: center;">
+                <!-- Círculo blanco detrás del logo -->
+                <div style="background-color: white; width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px auto; display: inline-block; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                  <img src="cid:logo" alt="VecinApp" style="height: 80px; width: 80px; object-fit: contain;" />
+                </div>
+                <h1 style="color: white; margin: 10px 0 0 0; font-size: 24px;">Gasto Común {period}</h1>
+              </div>
               
-              <p>Adjunto encontrará la liquidación de su gasto común correspondiente al período de <strong>{period}</strong>.</p>
-              
-              <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #4ECDC4; margin: 20px 0;">
-                <p style="margin: 0; font-size: 14px;"><strong>Monto a pagar:</strong></p>
-                <p style="margin: 5px 0 0 0; font-size: 24px; color: #4ECDC4; font-weight: bold;">
-                  $ {amount:,.0f}
+              <!-- Contenido -->
+              <div style="padding: 30px;">
+                <p style="font-size: 16px;">Estimado/a <strong>{to_name}</strong>,</p>
+                
+                {units_text}
+                
+                <p>Adjunto encontrará la liquidación de su gasto común correspondiente al período de <strong>{period}</strong>.</p>
+                
+                <div style="background-color: #f5f5f5; padding: 20px; border-left: 4px solid #7B4FFF; margin: 25px 0; border-radius: 4px;">
+                  <p style="margin: 0; font-size: 14px; color: #666;"><strong>Monto a pagar:</strong></p>
+                  <p style="margin: 5px 0 0 0; font-size: 32px; color: #7B4FFF; font-weight: bold;">
+                    $ {amount:,.0f}
+                  </p>
+                </div>
+                
+                <p style="font-size: 15px; margin-top: 25px;"><strong>📄 En el documento adjunto encontrará:</strong></p>
+                <ul style="line-height: 1.8; color: #555;">
+                  <li>Detalle de los cobros de su(s) unidad(es)</li>
+                  <li>Información bancaria para realizar el pago</li>
+                  <li>Detalle completo de los egresos de la comunidad</li>
+                </ul>
+                
+                <p style="margin-top: 25px;">Si tiene alguna consulta, no dude en contactarnos.</p>
+                
+                <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
+                
+                <p style="font-size: 12px; color: #999; text-align: center;">
+                  <strong style="color: #666;">{community_name}</strong><br/>
+                  Este es un correo automático generado por VecinApp.<br/>
+                  Por favor no responder a este mensaje.
                 </p>
               </div>
               
-              <p>En el documento adjunto encontrará:</p>
-              <ul>
-                <li>Detalle de los cobros de su unidad</li>
-                <li>Información bancaria para realizar el pago</li>
-                <li>Detalle completo de los egresos de la comunidad</li>
-              </ul>
-              
-              <p>Si tiene alguna consulta, no dude en contactarnos.</p>
-              
-              <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;" />
-              
-              <p style="font-size: 12px; color: #666;">
-                <strong>{community_name}</strong><br/>
-                Este es un correo automático generado por VecinApp. Por favor no responder a este mensaje.
-              </p>
             </div>
           </body>
         </html>
         """
         
         msg.attach(MIMEText(html_body, 'html'))
+        
+        # Adjuntar logo embebido
+        logo_paths = [
+            Path('/app/frontend/assets/images/Logo.png'),
+            Path('/app/frontend/assets/Logo.png'),
+            Path(__file__).parent.parent.parent.parent / 'frontend' / 'assets' / 'images' / 'Logo.png',
+        ]
+        
+        logo_attached = False
+        for logo_path in logo_paths:
+            if logo_path.exists():
+                try:
+                    with open(logo_path, 'rb') as logo_file:
+                        logo_image = MIMEImage(logo_file.read())
+                        logo_image.add_header('Content-ID', '<logo>')
+                        logo_image.add_header('Content-Disposition', 'inline', filename='logo.png')
+                        msg.attach(logo_image)
+                        logo_attached = True
+                        break
+                except Exception as e:
+                    print(f"⚠️  Error al adjuntar logo: {e}")
+        
+        if not logo_attached:
+            print("⚠️  Logo no encontrado, email enviado sin logo")
         
         # Adjuntar PDF
         if Path(pdf_path).exists():
