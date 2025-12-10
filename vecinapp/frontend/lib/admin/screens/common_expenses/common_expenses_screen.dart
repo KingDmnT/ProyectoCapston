@@ -8,6 +8,7 @@ import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vecinapp/admin/screens/common_expenses/common_expense_form_dialog.dart';
 import 'package:vecinapp/admin/screens/common_expenses/common_expense_detail_dialog.dart';
+import 'package:vecinapp/admin/screens/common_expenses/resident_expenses_screen.dart';
 
 /// Pantalla principal de gestión de gastos comunes para administradores
 class CommonExpensesScreen extends StatefulWidget {
@@ -136,27 +137,21 @@ class _CommonExpensesScreenState extends State<CommonExpensesScreen> {
       context: context,
       builder: (context) => CommonExpenseFormDialog(
         communityId: _communityId!,
-        onSaved: () {
-          Navigator.pop(context);
-          _loadExpenses();
+        onSaved: (CommonExpense newExpense) {
+          Navigator.pop(context); // Cerrar diálogo de creación
+          _loadExpenses(); // Refrescar lista de fondo
+          
+          // Abrir inmediatamente el detalle para editar items
+          // Usamos addPostFrameCallback para asegurar que el diálogo anterior se cerró completamente
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showDetailDialog(newExpense);
+          });
         },
       ),
     );
   }
 
-  void _showEditDialog(CommonExpense expense) {
-    showDialog(
-      context: context,
-      builder: (context) => CommonExpenseFormDialog(
-        communityId: _communityId!,
-        expense: expense,
-        onSaved: () {
-          Navigator.pop(context);
-          _loadExpenses();
-        },
-      ),
-    );
-  }
+
 
   void _showDetailDialog(CommonExpense expense) {
     showDialog(
@@ -552,13 +547,6 @@ class _CommonExpensesScreenState extends State<CommonExpensesScreen> {
                                                     onPressed: () => _showDetailDialog(expense),
                                                   ),
                                                   
-                                                  // Editar (solo DRAFT)
-                                                  if (expense.status == ExpenseStatus.draft)
-                                                    IconButton(
-                                                      icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-                                                      tooltip: 'Editar',
-                                                      onPressed: () => _showEditDialog(expense),
-                                                    ),
                                                   
                                                   // Cerrar período (solo DRAFT)
                                                   if (expense.status == ExpenseStatus.draft)
@@ -577,11 +565,32 @@ class _CommonExpensesScreenState extends State<CommonExpensesScreen> {
                                                     ),
                                                   
                                                   // Eliminar (solo DRAFT)
+                                                  // Eliminar (solo DRAFT)
                                                   if (expense.status == ExpenseStatus.draft)
                                                     IconButton(
                                                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
                                                       tooltip: 'Eliminar',
                                                       onPressed: () => _deleteExpense(expense),
+                                                    ),
+
+                                                  // Ver residentes y pagos (solo NOTIFIED o CLOSED)
+                                                  if (expense.status == ExpenseStatus.closed || expense.status == ExpenseStatus.notified)
+                                                    IconButton(
+                                                      icon: const Icon(Icons.people_outline, color: Colors.purple),
+                                                      tooltip: 'Gestionar pagos por residente',
+                                                      onPressed: () {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (context) => ResidentExpensesScreen(
+                                                            expense: {
+                                                              'id': expense.id,
+                                                              'month': expense.month,
+                                                              'year': expense.year,
+                                                            },
+                                                            communityId: _communityId!,
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
                                                 ],
                                               ),

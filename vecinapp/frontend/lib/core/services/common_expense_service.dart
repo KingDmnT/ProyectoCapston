@@ -175,6 +175,53 @@ class CommonExpenseService {
     }
   }
 
+  /// Obtener lista de residentes y pagos para un gasto común
+  Future<List<dynamic>> getExpenseResidents({
+    required String communityId,
+    required String expenseId,
+  }) async {
+    try {
+      final response = await _apiService.get(
+        '/common-expenses/$expenseId/residents',
+        queryParameters: {'community_id': communityId},
+      );
+      if (response is List) {
+        return response;
+      }
+      throw Exception('Formato de respuesta inesperado (se esperaba lista)');
+    } catch (e) {
+      print('Error al obtener residentes del gasto: $e');
+      rethrow;
+    }
+  }
+
+  /// Marcar gasto como pagado/pendiente para un residente
+  Future<void> payResidentExpense({
+    required String communityId,
+    required String expenseId,
+    required String residentUid,
+    required bool isPaid,
+  }) async {
+    try {
+      await _apiService.post(
+        '/common-expenses/$expenseId/residents/$residentUid/pay?community_id=$communityId&is_paid=$isPaid',
+        {},
+      );
+    } catch (e) {
+      print('Error al actualizar pago de residente: $e');
+      rethrow;
+    }
+  }
+  
+  /// Obtener URL para descarga de PDF por residente
+  String getResidentPdfUrl({
+    required String communityId,
+    required String expenseId,
+    required String residentUid,
+  }) {
+    return '${ApiService.baseUrl}/common-expenses/$expenseId/pdf-resident/$residentUid?community_id=$communityId';
+  }
+
   // ===========================
   // MÉTODOS PARA RESIDENTES
   // ===========================
