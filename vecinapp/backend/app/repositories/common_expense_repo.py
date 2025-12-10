@@ -336,7 +336,9 @@ class CommonExpenseRepository:
                 amount=unit_amount,
                 resident_uid=resident_uid,
                 resident_name=resident_name,
-                resident_email=resident_email
+                resident_email=resident_email,
+                is_paid=False,
+                payment_date=None
             )
             
             unit_expenses.append(unit_expense)
@@ -397,6 +399,39 @@ class CommonExpenseRepository:
         
         doc_ref.update({
             'status': ExpenseStatus.NOTIFIED.value,
+            'updated_at': datetime.now()
+        })
+        
+        return self.get_by_id(community_id, expense_id)
+    
+    def mark_as_paid(
+        self,
+        community_id: str,
+        expense_id: str,
+        resident_uid: str,
+        is_paid: bool = True
+    ) -> CommonExpense:
+        """
+        Marca como pagadas (o no pagadas) TODAS las unidades de un residente en un gasto común.
+        """
+        expense = self.get_by_id(community_id, expense_id)
+        if not expense:
+            raise ValueError(f"Gasto común {expense_id} no encontrado")
+        
+        updated_units = []
+        payment_date = datetime.now() if is_paid else None
+        
+        for unit in expense.unit_expenses:
+            if unit.resident_uid == resident_uid:
+                unit.is_paid = is_paid
+                unit.payment_date = payment_date
+            updated_units.append(unit.dict())
+            
+        doc_ref = self.db.collection('communities').document(community_id)\
+            .collection('common_expenses').document(expense_id)
+            
+        doc_ref.update({
+            'unit_expenses': updated_units,
             'updated_at': datetime.now()
         })
         

@@ -218,63 +218,59 @@ def notify_residents(
         )
     community_data = community_doc.to_dict()
     
-    # Preparar datos para emails
-    # Primero, agrupar unidades por residente
-    resident_units = {}  # {email: {'name': str, 'units': [unit_name], 'amount': total, 'pdf_path': str}}
-    
-    temp_dir = tempfile.mkdtemp()
-    
     try:
+        # Agrupar unidades por residente
+        resident_units = {}
         for unit_expense in expense.unit_expenses:
             if not unit_expense.resident_email:
-                continue  # Saltar unidades sin residente o sin email
-            
+                continue
+                
             email = unit_expense.resident_email
+            uid = unit_expense.resident_uid or email # Fallback to email as key if uid missing (should vary rarely happen)
             
-            # Agrupar por residente
-            if email not in resident_units:
-                resident_units[email] = {
+            if uid not in resident_units:
+                resident_units[uid] = {
+                    'email': email,
                     'name': unit_expense.resident_name or 'Residente',
                     'units': [],
-                    'amount': 0,
-                    'pdf_paths': []
+                    'amount': 0.0
                 }
             
-            resident_units[email]['units'].append(unit_expense.unit_name)
-            resident_units[email]['amount'] += unit_expense.amount
+            resident_units[uid]['units'].append(unit_expense)
+            resident_units[uid]['amount'] += unit_expense.amount
+            
         
-        # Generar PDFs y preparar emails
+        # Generar PDFs y enviar emails
         recipients = []
         month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
                       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
         period_str = f"{month_names[expense.month-1]} {expense.year}"
         
-        for unit_expense in expense.unit_expenses:
-            if not unit_expense.resident_email:
-                continue
-            
-            email = unit_expense.resident_email
-            
-            # Generar PDF para esta unidad específica
-            pdf_filename = f"gasto_comun_{expense.period}_{unit_expense.unit_name}.pdf"
+        # Crear directorio temporal para los PDFs
+        temp_dir = tempfile.mkdtemp()
+        
+        for uid, data in resident_units.items():
+            # Generar UN solo PDF por residente (con todas sus unidades)
+            pdf_filename = f"gasto_comun_{expense.period}_{data['name'].replace(' ', '_')}.pdf"
             pdf_path = os.path.join(temp_dir, pdf_filename)
             
             generate_common_expense_pdf(
                 expense_data=expense.dict(),
-                unit_expense=unit_expense.dict(),
+                unit_expenses=[u.dict() for u in data['units']],
                 community_data=community_data,
                 output_path=pdf_path
             )
             
-            # Preparar datos para email (uno por unidad, pero con info de todas las unidades del residente)
+            unit_numbers = [u.unit_name for u in data['units']]
+            
             recipients.append({
-                'to_email': email,
-                'to_name': resident_units[email]['name'],
+                'to_email': data['email'],
+                'to_name': data['name'],
                 'community_name': community_data.get('name', 'Comunidad'),
                 'period': period_str,
-                'amount': unit_expense.amount,  # Monto de esta unidad específica
+                'amount': data['amount'],
                 'pdf_path': pdf_path,
-                'unit_numbers': [unit_expense.unit_name]  # Solo esta unidad en este PDF
+                'unit_numbers': unit_numbers
             })
         
         # Enviar emails masivos
@@ -285,7 +281,7 @@ def notify_residents(
         
         return {
             "message": "Notificaciones enviadas",
-            "total": results['total'],
+            "total": len(resident_units),
             "sent": results['sent'],
             "failed": results['failed']
         }
@@ -322,13 +318,20 @@ def download_pdf(
             detail="Gasto común no encontrado"
         )
     
-    # Buscar unidad en unit_expenses
-    unit_expense = next((ue for ue in expense.unit_expenses if ue.unit_id == unit_id), None)
-    if not unit_expense:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Unidad no encontrada en este gasto común"
-        )
+    # Buscar TODAS las unidades del residente asociado a unit_id (grouped PDF)
+    # Primero encontramos la unidad solicitada para obtener el residente
+    target_unit = next((ue for ue in expense.unit_expenses if ue.unit_id == unit_id), None)
+    if not target_unit:
+        raise HTTPException(status_code=404, detail="Unidad no encontrada")
+        
+    resident_uid = target_unit.resident_uid
+    
+    # Filtramos todas las unidades de ese residente
+    if resident_uid:
+        resident_units = [ue for ue in expense.unit_expenses if ue.resident_uid == resident_uid]
+    else:
+        # Si no tiene residente asignado (raro), solo imprimimos esa unidad
+        resident_units = [target_unit]
     
     # Obtener datos de la comunidad
     from app.core.firebase import get_db
@@ -341,15 +344,17 @@ def download_pdf(
         )
     community_data = community_doc.to_dict()
     
-    # Generar PDF temporal
+    # Generar PDF temporal combinado
     temp_dir = tempfile.mkdtemp()
-    pdf_filename = f"gasto_comun_{expense.period}_{unit_expense.unit_name}.pdf"
+    # Usar nombre del residente o unidad si es unico
+    name_suffix = target_unit.resident_name or target_unit.unit_name
+    pdf_filename = f"gasto_comun_{expense.period}_{name_suffix.replace(' ', '_')}.pdf"
     pdf_path = os.path.join(temp_dir, pdf_filename)
     
     try:
         generate_common_expense_pdf(
             expense_data=expense.dict(),
-            unit_expense=unit_expense.dict(),
+            unit_expenses=[u.dict() for u in resident_units],
             community_data=community_data,
             output_path=pdf_path
         )
@@ -364,6 +369,51 @@ def download_pdf(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generando PDF: {str(e)}"
         )
+
+@router.get("/{expense_id}/pdf-resident/{resident_uid}")
+def download_resident_pdf(
+    expense_id: str,
+    resident_uid: str,
+    community_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Descarga el PDF de gasto común para un residente específico (agrupado).
+    Solo admin.
+    """
+    if current_user.get("role") != "administrator":
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
+    expense = get_repo().get_by_id(community_id, expense_id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Gasto común no encontrado")
+        
+    resident_units = [ue for ue in expense.unit_expenses if ue.resident_uid == resident_uid]
+    
+    if not resident_units:
+        raise HTTPException(status_code=404, detail="Residente no tiene unidades en este gasto")
+
+    # Obtener datos comunidad
+    from app.core.firebase import get_db
+    db = get_db()
+    community_doc = db.collection('communities').document(community_id).get()
+    community_data = community_doc.to_dict() if community_doc.exists else {}
+    
+    temp_dir = tempfile.mkdtemp()
+    name_suffix = resident_units[0].resident_name or 'Residente'
+    pdf_filename = f"gasto_comun_{expense.period}_{name_suffix.replace(' ', '_')}.pdf"
+    pdf_path = os.path.join(temp_dir, pdf_filename)
+    
+    try:
+        generate_common_expense_pdf(
+            expense_data=expense.dict(),
+            unit_expenses=[u.dict() for u in resident_units],
+            community_data=community_data,
+            output_path=pdf_path
+        )
+        return FileResponse(pdf_path, media_type='application/pdf', filename=pdf_filename)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/{expense_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_common_expense(
@@ -389,6 +439,72 @@ def delete_common_expense(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+@router.get("/{expense_id}/residents", response_model=List[dict])
+def get_expense_residents(
+    expense_id: str,
+    community_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obtiene la lista de residentes y sus gastos agrupados para un gasto común específico.
+    Solo administradores.
+    """
+    if current_user.get("role") != "administrator":
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
+    expense = get_repo().get_by_id(community_id, expense_id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Gasto común no encontrado")
+        
+    # Agrupar por residente
+    grouped = {}
+    for ue in expense.unit_expenses:
+        # Usar UID si existe, sino agrupar por "Sin Asignar" o similar?
+        # Asumiremos que unidades tienen resident_uid si estann asignadas.
+        uid = ue.resident_uid
+        if not uid:
+            continue # O manejar unidades vacías en un grupo "Sin Residente"
+            
+        if uid not in grouped:
+            grouped[uid] = {
+                'resident_uid': uid,
+                'resident_name': ue.resident_name or 'Desconocido',
+                'total_amount': 0.0,
+                'is_paid': True,
+                'payment_date': None,
+                'units': [],
+                'reference_unit_id': ue.unit_id # Guardar uno para referencias
+            }
+        
+        grouped[uid]['total_amount'] += ue.amount
+        grouped[uid]['units'].append(ue.unit_name)
+        if not ue.is_paid:
+            grouped[uid]['is_paid'] = False
+        if ue.payment_date:
+            grouped[uid]['payment_date'] = ue.payment_date # Tomar la fecha de cualquiera (idealmente son iguales)
+            
+    return list(grouped.values())
+
+@router.post("/{expense_id}/residents/{resident_uid}/pay")
+def mark_resident_paid(
+    expense_id: str,
+    resident_uid: str,
+    community_id: str,
+    is_paid: bool = Query(True),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Marca como pagado el gasto común de un residente (todas sus unidades).
+    Solo admin.
+    """
+    if current_user.get("role") != "administrator":
+        raise HTTPException(status_code=403, detail="No autorizado")
+        
+    try:
+        return get_repo().mark_as_paid(community_id, expense_id, resident_uid, is_paid)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # =======================
 # ENDPOINTS PARA RESIDENTES
@@ -535,7 +651,7 @@ def download_my_pdf(
     try:
         generate_common_expense_pdf(
             expense_data=expense.dict(),
-            unit_expense=unit_expense.dict(),
+            unit_expenses=[u.dict() for u in resident_units],
             community_data=community_data,
             output_path=pdf_path
         )

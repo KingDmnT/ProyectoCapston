@@ -21,18 +21,20 @@ COLOR_TEXT = colors.HexColor('#333333')
 COLOR_LIGHT_GRAY = colors.HexColor('#F5F5F5')
 COLOR_TABLE_HEADER = colors.HexColor('#3D6F99')  # Azul intermedio para headers
 
+from typing import List
+
 def generate_common_expense_pdf(
     expense_data: dict,
-    unit_expense: dict,
+    unit_expenses: List[dict],
     community_data: dict,
     output_path: str
 ) -> str:
     """
-    Genera PDF de gasto común para una unidad específica.
+    Genera PDF de gasto común agrupado para un residente.
     
     Args:
         expense_data: Datos del gasto común completo
-        unit_expense: Datos del gasto de la unidad específica
+        unit_expenses: Lista de gastos de unidades del residente
         community_data: Datos de la comunidad
         output_path: Ruta donde guardar el PDF
     
@@ -129,6 +131,13 @@ def generate_common_expense_pdf(
     elements.append(Paragraph(community_info, styles['Normal']))
     elements.append(Spacer(1, 0.2*inch))
     
+    # Calcular totales y nombres
+    total_expense = expense_data.get('total_amount', 0)
+    combined_unit_names = ", ".join([u.get('unit_name', '') for u in unit_expenses])
+    total_resident_amount = sum(u.get('amount', 0) for u in unit_expenses)
+    total_resident_alicuota = sum(u.get('alicuota', 0) for u in unit_expenses)
+    resident_name = unit_expenses[0].get('resident_name', 'Residente') if unit_expenses else 'N/A'
+
     # Tabla de información de unidad y fechas
     period = expense_data.get('period', '')
     month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
@@ -147,9 +156,9 @@ def generate_common_expense_pdf(
     vencimiento = f"28/{venc_month:02d}/{venc_year}"
     
     info_data = [
-        ['Unidad', f": {unit_expense.get('unit_name', 'N/A')}", 'Vencimiento', f": {vencimiento}"],
-        ['Residente', f": {unit_expense.get('resident_name', 'N/A')}", 'Mes de cobro', f": {period_str}"],
-        ['Prorrateo', f": {unit_expense.get('alicuota', 0):.2f}%", '', ''],
+        ['Unidades', f": {combined_unit_names}", 'Vencimiento', f": {vencimiento}"],
+        ['Residente', f": {resident_name}", 'Mes de cobro', f": {period_str}"],
+        ['Prorrateo Total', f": {total_resident_alicuota:.4f}%", '', ''],
     ]
     
     info_table = Table(info_data, colWidths=[1.5*inch, 2*inch, 1.8*inch, 1.5*inch])
@@ -165,28 +174,40 @@ def generate_common_expense_pdf(
     elements.append(Spacer(1, 0.3*inch))
     
     # Detalle del gasto común
-    elements.append(Paragraph("Detalle de su gasto común", heading_style))
+    elements.append(Paragraph("Detalle de sus cobros", heading_style))
     elements.append(Spacer(1, 0.1*inch))
     
-    # Calcular montos
-    total_expense = expense_data.get('total_amount', 0)
-    alicuota = unit_expense.get('alicuota', 0)
-    unit_amount = unit_expense.get('amount', 0)
-    
-    # Tabla de cobros
+    # Tabla de cobros desglosada
     cobros_data = [
-        ['Cobros del período', ''],
-        [f'Gasto común ({alicuota:.4f}%)', f'$ {unit_amount:,.0f}'],
+        ['Unidad', 'Prorrateo', 'Monto'],
     ]
     
-    cobros_table = Table(cobros_data, colWidths=[5*inch, 1.5*inch])
+    for ue in unit_expenses:
+        cobros_data.append([
+            ue.get('unit_name', ''),
+            f"{ue.get('alicuota', 0):.4f}%",
+            f"$ {ue.get('amount', 0):,.0f}"
+        ])
+    
+    # Agregar fila de total si hay más de una unidad
+    if len(unit_expenses) > 1:
+        cobros_data.append([
+            'Total',
+            f"{total_resident_alicuota:.4f}%",
+            f"$ {total_resident_amount:,.0f}"
+        ])
+
+    cobros_table = Table(cobros_data, colWidths=[2.5*inch, 1.5*inch, 2.5*inch])
     cobros_table.setStyle(TableStyle([
         ('FONT', (0, 0), (-1, 0), 'Helvetica-Bold', 10),
-        ('FONT', (0, 1), (0, -1), 'Helvetica', 9),
-        ('FONT', (1, 0), (1, -1), 'Helvetica', 9),
-        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-        ('TEXTCOLOR', (0, 0), (-1, -1), COLOR_TEXT),
+        ('FONT', (0, 1), (-1, -1), 'Helvetica', 9),
+        ('ALIGN', (2, 0), (2, -1), 'RIGHT'), # Alinear montos a derecha
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'), # Prorrateos a derecha
+         ('TEXTCOLOR', (0, 0), (-1, -1), COLOR_TEXT),
         ('LINEBELOW', (0, 0), (-1, 0), 1, COLOR_TEXT),
+        # Estilo para fila de total si existe
+        ('FONT', (0, -1), (-1, -1), 'Helvetica-Bold', 9) if len(unit_expenses) > 1 else ('FONT', (0, 0), (0, 0), 'Helvetica', 1),
+        ('LINEABOVE', (0, -1), (-1, -1), 0.5, COLOR_TEXT) if len(unit_expenses) > 1 else ('FONT', (0, 0), (0, 0), 'Helvetica', 1),
     ]))
     
     elements.append(cobros_table)
@@ -194,7 +215,7 @@ def generate_common_expense_pdf(
     
     # Total a pagar destacado
     total_data = [
-        ['Total a pagar', f'$ {unit_amount:,.0f}']
+        ['Total a pagar', f'$ {total_resident_amount:,.0f}']
     ]
     
     total_table = Table(total_data, colWidths=[5*inch, 1.5*inch])
