@@ -476,9 +476,9 @@ class _DashboardViewState extends State<_DashboardView> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             SizedBox(
-              height: 300,
+              height: 200,
               child: StreamBuilder<QuerySnapshot>(
                 stream: _firestore
                     .collection('communities')
@@ -503,26 +503,45 @@ class _DashboardViewState extends State<_DashboardView> {
                     );
                   }
 
-                  // Preparar datos para el gráfico
-                  final spots = <FlSpot>[];
+                  // Preparar datos para el gráfico de barras
+                  final barGroups = <BarChartGroupData>[];
                   final months = <String>[];
                   
                   for (int i = expenses.length - 1; i >= 0; i--) {
                     final data = expenses[i].data() as Map<String, dynamic>;
                     final month = data['month'] as int;
-                    final year = data['year'] as int;
                     final total = (data['total_amount'] as num?)?.toDouble() ?? 0.0;
                     
-                    spots.add(FlSpot(i.toDouble(), total));
-                    months.add('${_getMonthAbbr(month)}/$year');
+                    barGroups.add(
+                      BarChartGroupData(
+                        x: expenses.length - 1 - i,
+                        barRods: [
+                          BarChartRodData(
+                            toY: total,
+                            color: primaryPurple,
+                            width: 16,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              topRight: Radius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    months.add('${_getMonthAbbr(month)}');
                   }
 
-                  return LineChart(
-                    LineChartData(
+                  final maxY = barGroups.isEmpty ? 0.0 : barGroups.map((g) => g.barRods.first.toY).reduce((a, b) => a > b ? a : b);
+
+                  return BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxY * 1.2,
+                      minY: 0,
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
-                        horizontalInterval: 500000,
+                        horizontalInterval: maxY > 0 ? maxY / 4 : 100000,
                         getDrawingHorizontalLine: (value) {
                           return FlLine(
                             color: Colors.grey[200]!,
@@ -537,13 +556,12 @@ class _DashboardViewState extends State<_DashboardView> {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 30,
-                            interval: 1,
+                            reservedSize: 24,
                             getTitlesWidget: (double value, TitleMeta meta) {
                               final index = value.toInt();
                               if (index < 0 || index >= months.length) return const Text('');
                               return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
+                                padding: const EdgeInsets.only(top: 4.0),
                                 child: Text(
                                   months[index],
                                   style: GoogleFonts.inter(
@@ -558,13 +576,13 @@ class _DashboardViewState extends State<_DashboardView> {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            reservedSize: 60,
-                            interval: 500000,
+                            reservedSize: 50,
+                            interval: maxY > 0 ? maxY / 4 : 100000,
                             getTitlesWidget: (double value, TitleMeta meta) {
                               return Text(
                                 '\$${NumberFormat.compact().format(value)}',
                                 style: GoogleFonts.inter(
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   color: Colors.grey[600],
                                 ),
                               );
@@ -573,34 +591,23 @@ class _DashboardViewState extends State<_DashboardView> {
                         ),
                       ),
                       borderData: FlBorderData(show: false),
-                      minX: 0,
-                      maxX: (spots.length - 1).toDouble(),
-                      minY: 0,
-                      maxY: spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.2,
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: primaryPurple,
-                          barWidth: 3,
-                          isStrokeCapRound: true,
-                          dotData: FlDotData(
-                            show: true,
-                            getDotPainter: (spot, percent, barData, index) {
-                              return FlDotCirclePainter(
-                                radius: 4,
-                                color: primaryPurple,
-                                strokeWidth: 2,
-                                strokeColor: Colors.white,
-                              );
-                            },
-                          ),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: primaryPurple.withOpacity(0.1),
-                          ),
+                      barGroups: barGroups,
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipBgColor: primaryPurple.withOpacity(0.8),
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            return BarTooltipItem(
+                              '\$${NumberFormat('#,###').format(rod.toY)}',
+                              GoogleFonts.inter(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },
