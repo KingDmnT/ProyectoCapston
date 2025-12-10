@@ -483,23 +483,25 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                               // Tipo (flex: 2)
                                               Expanded(
                                                 flex: 2,
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: _getTypeColor(maintenance.type).withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    border: Border.all(color: _getTypeColor(maintenance.type)),
-                                                  ),
-                                                  child: Text(
-                                                    maintenance.type.displayName,
-                                                    style: TextStyle(
-                                                      color: _getTypeColor(maintenance.type),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w500,
+                                                child: Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: _getTypeColor(maintenance.type).withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(color: _getTypeColor(maintenance.type)),
                                                     ),
-                                                    textAlign: TextAlign.center,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    child: Text(
+                                                      maintenance.type.displayName,
+                                                      style: TextStyle(
+                                                        color: _getTypeColor(maintenance.type),
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -536,23 +538,25 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                               // Estado (flex: 2)
                                               Expanded(
                                                 flex: 2,
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: _getStatusColor(maintenance.status).withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    border: Border.all(color: _getStatusColor(maintenance.status)),
-                                                  ),
-                                                  child: Text(
-                                                    maintenance.status.displayName,
-                                                    style: TextStyle(
-                                                      color: _getStatusColor(maintenance.status),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w500,
+                                                child: Align(
+                                                  alignment: Alignment.centerLeft,
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: _getStatusColor(maintenance.status).withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(color: _getStatusColor(maintenance.status)),
                                                     ),
-                                                    textAlign: TextAlign.center,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    child: Text(
+                                                      maintenance.status.displayName,
+                                                      style: TextStyle(
+                                                        color: _getStatusColor(maintenance.status),
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
