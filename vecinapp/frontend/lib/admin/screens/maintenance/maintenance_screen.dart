@@ -404,30 +404,37 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                           flex: 3,
                                           child: Text('Título', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Proveedor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Costo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 2,
                                           child: Text('Progreso', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
+                                        SizedBox(width: 8),
                                         Expanded(
                                           flex: 1,
                                           child: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
@@ -472,6 +479,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   ],
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Tipo (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -495,6 +503,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   ),
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Proveedor (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -505,6 +514,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Fecha (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -513,6 +523,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   style: const TextStyle(fontSize: 11),
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Costo (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -521,6 +532,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   style: const TextStyle(fontSize: 11),
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Estado (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -544,6 +556,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                   ),
                                                 ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Progreso (flex: 2)
                                               Expanded(
                                                 flex: 2,
@@ -566,6 +579,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                                         ],
                                                       ),
                                               ),
+                                              const SizedBox(width: 8),
                                               // Acciones (flex: 1)
                                               Expanded(
                                                 flex: 1,
