@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/models/maintenance.dart';
 import 'package:vecinapp/core/models/user.dart';
-import 'package:vecinapp/core/services/maintenance_service.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/core/services/user_service.dart';
 import 'package:vecinapp/admin/screens/maintenance/maintenance_form_dialog.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Pantalla de gestión de mantenimientos para administradores
 class MaintenanceScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class MaintenanceScreen extends StatefulWidget {
 }
 
 class _MaintenanceScreenState extends State<MaintenanceScreen> {
-  final MaintenanceService _maintenanceService = MaintenanceService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserService _userService = UserService();
   List<Maintenance> _allMaintenances = [];
   bool _isLoading = false;
@@ -62,11 +62,33 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
     
     setState(() => _isLoading = true);
     try {
-      final maintenances = await _maintenanceService.getMaintenances(
-        communityId: _currentCommunityId!,
-        type: _filterType,
-        status: _filterStatus,
-      );
+      // Construir query base
+      Query query = _firestore
+          .collection('communities')
+          .doc(_currentCommunityId)
+          .collection('maintenances');
+      
+      // Aplicar filtros
+      if (_filterType != null) {
+        query = query.where('type', isEqualTo: _filterType);
+      }
+      if (_filterStatus != null) {
+        query = query.where('status', isEqualTo: _filterStatus);
+      }
+      
+      // Obtener datos
+      final snapshot = await query.get();
+      final maintenances = snapshot.docs.map((doc) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id; // Agregar el ID del documento
+          return Maintenance.fromJson(data);
+        } catch (e) {
+          print('Error parseando mantenimiento ${doc.id}: $e');
+          return null;
+        }
+      }).where((m) => m != null).cast<Maintenance>().toList();
+      
       setState(() {
         _allMaintenances = maintenances;
         _currentPage = 0;
@@ -142,10 +164,18 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
 
     if (confirm == true) {
       try {
-        await _maintenanceService.approveMaintenance(
-          communityId: _currentCommunityId!,
-          maintenanceId: maintenance.id,
-        );
+        await _firestore
+            .collection('communities')
+            .doc(_currentCommunityId)
+            .collection('maintenances')
+            .doc(maintenance.id)
+            .update({
+          'status': 'aprobado',
+          'approved_by': _currentUser?.id,
+          'approval_date': FieldValue.serverTimestamp(),
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Mantenimiento aprobado')),
@@ -184,10 +214,16 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
 
     if (confirm == true) {
       try {
-        await _maintenanceService.rejectMaintenance(
-          communityId: _currentCommunityId!,
-          maintenanceId: maintenance.id,
-        );
+        await _firestore
+            .collection('communities')
+            .doc(_currentCommunityId)
+            .collection('maintenances')
+            .doc(maintenance.id)
+            .update({
+          'status': 'rechazado',
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Mantenimiento rechazado')),

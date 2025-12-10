@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/admin/screens/communities/communities_screen.dart';
 import 'package:vecinapp/admin/screens/users/users_screen.dart';
 import 'package:vecinapp/admin/screens/maintenance/maintenance_screen.dart';
 import 'package:vecinapp/admin/screens/common_expenses/common_expenses_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-// Dashboard principal del administrador (backoffice web)
+/// Dashboard administrativo con diseño corporativo morado y datos reales
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
 
@@ -18,211 +20,95 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  String _userName = 'Administrador';
+  String _communityName = 'Cargando...';
+  String? _communityId;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndCommunityData();
+  }
+  
+  Future<void> _loadUserAndCommunityData() async {
+    final user = _authService.currentUser;
+    if (user != null) {
+      try {
+        // Obtener datos del usuario
+        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          // Probar ambos formatos de campo
+          final firstName = userData?['firstName'] as String? ?? userData?['first_name'] as String? ?? '';
+          final lastName = userData?['lastName'] as String? ?? userData?['last_name'] as String? ?? '';
+          final communityId = userData?['community_id'] as String? ?? userData?['communityId'] as String?;
+          
+          setState(() {
+            if (firstName.isNotEmpty && lastName.isNotEmpty) {
+              _userName = '$firstName $lastName'.trim();
+            } else if (firstName.isNotEmpty) {
+              _userName = firstName;
+            } else {
+              _userName = user.email?.split('@').first ?? 'Administrador';
+            }
+            _communityId = communityId; // Guardar para pasar al hijo
+          });
+          
+          // Obtener nombre de la comunidad
+          if (communityId != null) {
+            final communityDoc = await _firestore.collection('communities').doc(communityId).get();
+            if (communityDoc.exists) {
+              final communityData = communityDoc.data();
+              setState(() {
+                _communityName = communityData?['name'] as String? ?? 'Tu Condominio';
+              });
+            }
+          }
+        }
+      } catch (e) {
+        print('Error cargando datos de usuario/comunidad: $e');
+      }
+    }
+  }
 
-  final List<Widget> _views = [
-    const _DashboardView(),
+  // Colores corporativos
+  static const primaryPurple = Color(0xFF7B4FFF);
+  static const purpleDark = Color(0xFF6A3DE8);
+  static const accentGreen = Color(0xFF00D9A3);
+  static const accentYellow = Color(0xFFFFB800);
+  static const warningRed = Color(0xFFFF5252);
+
+  List<Widget> get _views => [
+    _DashboardView(communityId: _communityId),
     const CommunitiesScreen(),
     const UsersScreen(),
     const MaintenanceScreen(),
     const CommonExpensesScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
   ];
-  
-  final List<String> _titles = [
-    "Dashboard General",
-    "Gestión de Comunidades",
-    "Gestión de Usuarios",
-    "Gestión de Mantenimientos",
-    "Gestión de Gastos Comunes",
-    "Gestión de Visitas"
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final user = _authService.currentUser;
-    final String userEmail = user?.email ?? '';
-    final String initials = userEmail.isNotEmpty 
-        ? userEmail.substring(0, 2).toUpperCase()
-        : 'AD';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Row(
         children: [
-          // Sidebar de navegación
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            backgroundColor: Colors.white,
-            elevation: 1,
-            extended: true,
-            minExtendedWidth: 200,
-            indicatorColor: AppColors.primary.withOpacity(0.1),
-            leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.security, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "VecinApp",
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18
-                    ),
-                  )
-                ],
-              ),
-            ),
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard, color: AppColors.primary),
-                label: Text('Dashboard'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.location_city_outlined),
-                selectedIcon: Icon(Icons.location_city, color: AppColors.primary),
-                label: Text('Comunidades'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.people_outline),
-                selectedIcon: Icon(Icons.people, color: AppColors.primary),
-                label: Text('Usuarios'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.build_outlined),
-                selectedIcon: Icon(Icons.build, color: AppColors.primary),
-                label: Text('Mantenimiento'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long, color: AppColors.primary),
-                label: Text('Gastos Comunes'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.qr_code_scanner_outlined),
-                selectedIcon: Icon(Icons.qr_code, color: AppColors.primary),
-                label: Text('Visitas'),
-              ),
-            ],
-            trailing: Expanded(
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.logout, color: Colors.red, size: 20),
-                    label: const Text(
-                      "Cerrar Sesión",
-                      style: TextStyle(color: Colors.red)
-                    ),
-                    onPressed: () async {
-                      await _authService.signOut();
-                      if (mounted) {
-                        Navigator.pushReplacementNamed(context, '/');
-                      }
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // Sidebar morado
+          _buildPurpleSidebar(),
           
           // Contenido principal
           Expanded(
             child: Column(
               children: [
-                // Topbar
-                Container(
-                  height: 80,
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey[200]!),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        _titles[_selectedIndex],
-                        style: GoogleFonts.inter(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.grey[200]!),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppColors.primary,
-                              child: Text(
-                                initials,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Administrador",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13
-                                  ),
-                                ),
-                                Text(
-                                  userEmail,
-                                  style: TextStyle(
-                                    color: Colors.grey[500],
-                                    fontSize: 11
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+                // Header morado
+                _buildPurpleHeader(),
                 
                 // Área de contenido
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: _views[_selectedIndex],
-                  ),
+                  child: _views[_selectedIndex],
                 ),
               ],
             ),
@@ -231,68 +117,706 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       ),
     );
   }
-}
 
-// Vista de dashboard con estadísticas
-class _DashboardView extends StatelessWidget {
-  const _DashboardView();
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 4,
-      crossAxisSpacing: 24,
-      mainAxisSpacing: 24,
-      childAspectRatio: 1.4,
-      children: [
-        _buildStatCard('Comunidades', '12', Icons.location_city, Colors.blue),
-        _buildStatCard('Usuarios', '1,250', Icons.people, Colors.orange),
-        _buildStatCard('Visitas Hoy', '45', Icons.qr_code, Colors.green),
-        _buildStatCard('Alertas', '3', Icons.warning, Colors.red),
-      ],
+  Widget _buildPurpleSidebar() {
+    return Container(
+      width: 280,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [primaryPurple, purpleDark],
+        ),
+      ),
+      child: Column(
+        children: [
+          // Logo
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  child: Image.asset(
+                    'assets/images/LogoBcoSinFondo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+          
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 20),
+          
+          // Menú items
+          _buildMenuItem(0, Icons.home, 'Inicio'),
+          _buildMenuItem(1, Icons.location_city, 'Comunidades'),
+          _buildMenuItem(2, Icons.people, 'Usuarios'),
+          _buildMenuItem(3, Icons.build, 'Mantenimiento'),
+          _buildMenuItem(4, Icons.receipt_long, 'Gastos Comunes'),
+          _buildMenuItem(5, Icons.qr_code_scanner, 'Visitas'),
+          
+          const Spacer(),
+          
+          // Botón cerrar sesión
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: TextButton.icon(
+              icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+              label: Text(
+                'Cerrar Sesión',
+                style: GoogleFonts.inter(color: Colors.white70),
+              ),
+              onPressed: () async {
+                await _authService.signOut();
+                if (mounted) {
+                  Navigator.pushReplacementNamed(context, '/');
+                }
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMenuItem(int index, IconData icon, String label) {
+    final isSelected = _selectedIndex == index;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
               children: [
+                Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                const SizedBox(width: 16),
                 Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold
+                  label,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPurpleHeader() {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [primaryPurple, purpleDark],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Text(
-                  title,
-                  style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  'Hola, ${_userName.split(' ').first}',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _communityName,
+                  style: GoogleFonts.inter(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
                 ),
               ],
-            )
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () {},
+            ),
           ],
         ),
       ),
     );
+  }
+}
+
+// Vista del dashboard con datos reales de Firebase
+class _DashboardView extends StatefulWidget {
+  final String? communityId;
+  
+  const _DashboardView({this.communityId});
+
+  @override
+  State<_DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<_DashboardView> {
+  static const primaryPurple = Color(0xFF7B4FFF);
+  static const accentGreen = Color(0xFF00D9A3);
+  static const accentYellow = Color(0xFFFFB800);
+  static const warningRed = Color(0xFFFF5252);
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  String? get _communityId => widget.communityId;
+
+  @override
+  Widget build(BuildContext context) {
+    if (_communityId == null) {
+      return const Center(child: CircularProgressIndicator(color: primaryPurple));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // KPIs superiores
+          _buildKPIRow(),
+          
+          const SizedBox(height: 24),
+          
+          // Gráfico de gastos comunes por mes
+          _buildMonthlyExpensesChart(),
+          
+          const SizedBox(height: 24),
+          
+          // Fila: Morosidad y Próximos Mantenimientos
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildMorosidadCard()),
+              const SizedBox(width: 20),
+              Expanded(child: _buildProximosMantenimientosCard()),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // KPIs: Residentes activos, Unidades vigentes, Gastos notificados
+  Widget _buildKPIRow() {
+    return Row(
+      children: [
+        Expanded(child: _buildResidentesActivosKPI()),
+        const SizedBox(width: 16),
+        Expanded(child: _buildUnidadesVigentesKPI()),
+        const SizedBox(width: 16),
+        Expanded(child: _buildGastosNotificadosKPI()),
+      ],
+    );
+  }
+
+  Widget _buildResidentesActivosKPI() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'resident')
+          .snapshots(),
+      builder: (context, snapshot) {
+        int count = 0;
+        if (snapshot.hasData) {
+          // Filtrar residentes que tienen memberships en esta comunidad
+          count = snapshot.data!.docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final memberships = data['memberships'] as List<dynamic>? ?? [];
+            return memberships.any((membership) {
+              final membershipMap = membership as Map<String, dynamic>;
+              return membershipMap['community_id'] == _communityId;
+            });
+          }).length;
+        }
+        return _buildKPICard(
+          title: 'Residentes Activos',
+          value: count.toString(),
+          icon: Icons.people,
+          color: primaryPurple,
+        );
+      },
+    );
+  }
+
+  Widget _buildUnidadesVigentesKPI() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('communities')
+          .doc(_communityId)
+          .collection('units')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+        return _buildKPICard(
+          title: 'Unidades Vigentes',
+          value: count.toString(),
+          icon: Icons.apartment,
+          color: accentGreen,
+        );
+      },
+    );
+  }
+
+  Widget _buildGastosNotificadosKPI() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('communities')
+          .doc(_communityId)
+          .collection('common_expenses')
+          .where('status', isEqualTo: 'notified')
+          .snapshots(),
+      builder: (context, snapshot) {
+        final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+        return _buildKPICard(
+          title: 'Gastos Notificados',
+          value: count.toString(),
+          icon: Icons.check_circle,
+          color: accentGreen,
+        );
+      },
+    );
+  }
+
+  Widget _buildKPICard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 28),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Gráfico de gastos comunes por mes (últimos 12 meses)
+  Widget _buildMonthlyExpensesChart() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Gastos Comunes Generados (Últimos 12 Meses)',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 300,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection('communities')
+                    .doc(_communityId)
+                    .collection('common_expenses')
+                    .orderBy('year', descending: true)
+                    .orderBy('month', descending: true)
+                    .limit(12)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator(color: primaryPurple));
+                  }
+
+                  final expenses = snapshot.data!.docs;
+                  if (expenses.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No hay gastos comunes registrados',
+                        style: GoogleFonts.inter(color: Colors.grey[600]),
+                      ),
+                    );
+                  }
+
+                  // Preparar datos para el gráfico
+                  final spots = <FlSpot>[];
+                  final months = <String>[];
+                  
+                  for (int i = expenses.length - 1; i >= 0; i--) {
+                    final data = expenses[i].data() as Map<String, dynamic>;
+                    final month = data['month'] as int;
+                    final year = data['year'] as int;
+                    final total = (data['total_amount'] as num?)?.toDouble() ?? 0.0;
+                    
+                    spots.add(FlSpot(i.toDouble(), total));
+                    months.add('${_getMonthAbbr(month)}/$year');
+                  }
+
+                  return LineChart(
+                    LineChartData(
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: false,
+                        horizontalInterval: 500000,
+                        getDrawingHorizontalLine: (value) {
+                          return FlLine(
+                            color: Colors.grey[200]!,
+                            strokeWidth: 1,
+                          );
+                        },
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 30,
+                            interval: 1,
+                            getTitlesWidget: (double value, TitleMeta meta) {
+                              final index = value.toInt();
+                              if (index < 0 || index >= months.length) return const Text('');
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  months[index],
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 60,
+                            interval: 500000,
+                            getTitlesWidget: (double value, TitleMeta meta) {
+                              return Text(
+                                '\$${NumberFormat.compact().format(value)}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: false),
+                      minX: 0,
+                      maxX: (spots.length - 1).toDouble(),
+                      minY: 0,
+                      maxY: spots.map((e) => e.y).reduce((a, b) => a > b ? a : b) * 1.2,
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: primaryPurple,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) {
+                              return FlDotCirclePainter(
+                                radius: 4,
+                                color: primaryPurple,
+                                strokeWidth: 2,
+                                strokeColor: Colors.white,
+                              );
+                            },
+                          ),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: primaryPurple.withOpacity(0.1),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Tarjeta de morosidad
+  Widget _buildMorosidadCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _firestore
+              .collection('communities')
+              .doc(_communityId)
+              .collection('common_expenses')
+              .where('status', isEqualTo: 'notified')
+              .snapshots(),
+          builder: (context, snapshot) {
+            int unidadesEnMora = 0;
+            double montoMorosidad = 0.0;
+
+            if (snapshot.hasData) {
+              for (var doc in snapshot.data!.docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final unitExpenses = data['unit_expenses'] as List<dynamic>? ?? [];
+                
+                for (var unitExp in unitExpenses) {
+                  final isPaid = unitExp['is_paid'] as bool? ?? false;
+                  if (!isPaid) {
+                    unidadesEnMora++;
+                    montoMorosidad += (unitExp['amount'] as num?)?.toDouble() ?? 0.0;
+                  }
+                }
+              }
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Morosidad',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: warningRed.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.warning_amber, color: warningRed, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$unidadesEnMora',
+                            style: GoogleFonts.inter(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: warningRed,
+                            ),
+                          ),
+                          Text(
+                            'Unidades en Mora',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Monto: \$${NumberFormat('#,###').format(montoMorosidad)}',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Próximos Mantenimientos
+  Widget _buildProximosMantenimientosCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.build_circle, color: accentGreen, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Próximos Mantenimientos',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('communities')
+                  .doc(_communityId)
+                  .collection('maintenances')
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  print('Error cargando mantenimientos: ${snapshot.error}');
+                  return Text(
+                    'Error al cargar mantenimientos',
+                    style: GoogleFonts.inter(color: Colors.red),
+                  );
+                }
+                
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator(color: primaryPurple));
+                }
+
+                final maintenances = snapshot.data!.docs;
+                if (maintenances.isEmpty) {
+                  return Text(
+                    'No hay mantenimientos pendientes',
+                    style: GoogleFonts.inter(color: Colors.grey[600]),
+                  );
+                }
+
+                return Column(
+                  children: maintenances.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final title = data['title'] as String? ?? 'Sin título';
+                    final frequency = data['frequency'] as String? ?? 'No definida';
+                    final cost = (data['cost'] as num?)?.toDouble() ?? 0.0;
+                    final scheduledDate = (data['scheduled_date'] as Timestamp?)?.toDate();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: accentGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${scheduledDate != null ? DateFormat('dd/MM/yyyy').format(scheduledDate) : frequency} - \$${NumberFormat('#,###').format(cost)}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getMonthAbbr(int month) {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return months[month - 1];
   }
 }
