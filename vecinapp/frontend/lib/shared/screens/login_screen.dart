@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const Spacer(),
-                        Image.asset('assets/images/Logo.png', height: 100, width: 100),
+                        Image.asset('assets/images/LogoBcoSinFondo.png', height: 100, width: 100),
                         const SizedBox(height: 10),
                         const Text(
                           "Bienvenido",
@@ -135,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (isWeb) ...[
                   // HEADER PARA WEB
                   const SizedBox(height: 40),
-                  Image.asset('assets/images/Logo.png', height: 120, width: 120),
+                  Image.asset('assets/images/LogoSinFondo.png', height: 120, width: 120),
                   const SizedBox(height: 20),
                   const SizedBox(height: 8),
                   const Text(

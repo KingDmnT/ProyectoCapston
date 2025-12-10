@@ -29,6 +29,7 @@ dependencies:
   intl: ^0.19.0
   file_picker: ^6.1.1
   excel: ^4.0.0
+  fl_chart: ^0.69.0  # Gráficos para dashboard
   
   # Backend & Firebase
   firebase_core: ^2.27.0

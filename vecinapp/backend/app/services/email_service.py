@@ -74,9 +74,7 @@ def send_common_expense_email(
               <!-- Header con logo -->
               <div style="background: linear-gradient(135deg, #7B4FFF 0%, #6A3DE8 100%); padding: 30px; text-align: center;">
                 <!-- Círculo blanco detrás del logo -->
-                <div style="background-color: white; width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px auto; display: inline-block; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-                  <img src="cid:logo" alt="VecinApp" style="height: 80px; width: 80px; object-fit: contain;" />
-                </div>
+                    <img src="cid:logo" alt="VecinApp" style="height: 80px; width: 80px; object-fit: contain;" />
                 <h1 style="color: white; margin: 10px 0 0 0; font-size: 24px;">Gasto Común {period}</h1>
               </div>
               
@@ -122,9 +120,9 @@ def send_common_expense_email(
         
         # Adjuntar logo embebido
         logo_paths = [
-            Path('/app/frontend/assets/images/Logo.png'),
-            Path('/app/frontend/assets/Logo.png'),
-            Path(__file__).parent.parent.parent.parent / 'frontend' / 'assets' / 'images' / 'Logo.png',
+            Path('/app/frontend/assets/images/LogoBcoSinFondo.png'),
+            Path('/app/frontend/assets/LogoBcoSinFondo.png'),
+            Path(__file__).parent.parent.parent.parent / 'frontend' / 'assets' / 'images' / 'LogoBcoSinFondo.png',
         ]
         
         logo_attached = False
@@ -134,7 +132,7 @@ def send_common_expense_email(
                     with open(logo_path, 'rb') as logo_file:
                         logo_image = MIMEImage(logo_file.read())
                         logo_image.add_header('Content-ID', '<logo>')
-                        logo_image.add_header('Content-Disposition', 'inline', filename='logo.png')
+                        logo_image.add_header('Content-Disposition', 'inline', filename='LogoBcoSinFondo.png')
                         msg.attach(logo_image)
                         logo_attached = True
                         break
