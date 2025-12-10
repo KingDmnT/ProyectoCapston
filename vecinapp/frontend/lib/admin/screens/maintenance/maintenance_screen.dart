@@ -484,17 +484,17 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                               Expanded(
                                                 flex: 2,
                                                 child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                   decoration: BoxDecoration(
                                                     color: _getTypeColor(maintenance.type).withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderRadius: BorderRadius.circular(8),
                                                     border: Border.all(color: _getTypeColor(maintenance.type)),
                                                   ),
                                                   child: Text(
                                                     maintenance.type.displayName,
                                                     style: TextStyle(
                                                       color: _getTypeColor(maintenance.type),
-                                                      fontSize: 11,
+                                                      fontSize: 10,
                                                       fontWeight: FontWeight.w500,
                                                     ),
                                                     textAlign: TextAlign.center,
@@ -537,17 +537,17 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                               Expanded(
                                                 flex: 2,
                                                 child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                   decoration: BoxDecoration(
                                                     color: _getStatusColor(maintenance.status).withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderRadius: BorderRadius.circular(8),
                                                     border: Border.all(color: _getStatusColor(maintenance.status)),
                                                   ),
                                                   child: Text(
                                                     maintenance.status.displayName,
                                                     style: TextStyle(
                                                       color: _getStatusColor(maintenance.status),
-                                                      fontSize: 11,
+                                                      fontSize: 10,
                                                       fontWeight: FontWeight.w500,
                                                     ),
                                                     textAlign: TextAlign.center,
