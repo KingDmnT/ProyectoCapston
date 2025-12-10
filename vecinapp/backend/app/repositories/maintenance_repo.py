@@ -128,6 +128,12 @@ class MaintenanceRepository:
         if maintenance_update.frequency:
             update_data['frequency'] = maintenance_update.frequency.value
         
+        if maintenance_update.status:
+            update_data['status'] = maintenance_update.status.value
+            # Si el estado es completado, registrar fecha
+            if maintenance_update.status == MaintenanceStatus.COMPLETADO:
+                update_data['completed_date'] = datetime.now()
+        
         # Serializar checklist si existe
         if maintenance_update.checklist_items:
             update_data['checklist_items'] = [

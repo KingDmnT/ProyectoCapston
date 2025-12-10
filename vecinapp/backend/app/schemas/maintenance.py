@@ -57,6 +57,7 @@ class MaintenanceUpdate(BaseModel):
     assigned_to: Optional[str] = None
     notes: Optional[str] = None
     checklist_items: Optional[List[ChecklistItem]] = None
+    status: Optional[MaintenanceStatus] = None  # AGREGADO
 
 class Maintenance(MaintenanceBase):
     id: str
