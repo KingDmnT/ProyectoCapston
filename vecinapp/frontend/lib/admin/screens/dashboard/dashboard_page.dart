@@ -595,7 +595,7 @@ class _DashboardViewState extends State<_DashboardView> {
                       barTouchData: BarTouchData(
                         enabled: true,
                         touchTooltipData: BarTouchTooltipData(
-                          tooltipBgColor: primaryPurple.withOpacity(0.8),
+                          getTooltipColor: (group) => primaryPurple.withOpacity(0.8),
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             return BarTooltipItem(
                               '\$${NumberFormat('#,###').format(rod.toY)}',
