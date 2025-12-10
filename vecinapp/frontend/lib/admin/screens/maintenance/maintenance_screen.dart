@@ -389,134 +389,225 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : _paginatedMaintenances.isEmpty
                             ? const Center(child: Text('No hay mantenimientos para mostrar'))
-                            : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: SingleChildScrollView(
-                                  child: DataTable(
-                                    headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-                                    dataRowHeight: 60,
-                                    columnSpacing: 16,
-                                    columns: const [
-                                      DataColumn(label: Text('Título', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Proveedor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Costo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Progreso', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                      DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                    ],
-                                    rows: _paginatedMaintenances.map((maintenance) {
-                                      return DataRow(cells: [
-                                        DataCell(
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                maintenance.title,
-                                                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
-                                              ),
-                                              if (maintenance.isOverdue)
-                                                Row(
-                                                  children: const [
-                                                    Icon(Icons.warning, size: 12, color: Colors.red),
-                                                    SizedBox(width: 4),
-                                                    Text('Vencido', style: TextStyle(fontSize: 10, color: Colors.red)),
-                                                  ],
-                                                ),
-                                            ],
-                                          ),
+                            : Column(
+                                children: [
+                                  // Header
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[50],
+                                      border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text('Título', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: _getTypeColor(maintenance.type).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: _getTypeColor(maintenance.type)),
-                                            ),
-                                            child: Text(
-                                              maintenance.type.displayName,
-                                              style: TextStyle(
-                                                color: _getTypeColor(maintenance.type),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(Text(maintenance.providerName, style: const TextStyle(fontSize: 11))),
-                                        DataCell(
-                                          Text(DateFormat('dd/MM/yyyy').format(maintenance.scheduledDate), style: const TextStyle(fontSize: 11)),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Proveedor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(
-                                          Text('\$${maintenance.cost.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11)),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: _getStatusColor(maintenance.status).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(color: _getStatusColor(maintenance.status)),
-                                            ),
-                                            child: Text(
-                                              maintenance.status.displayName,
-                                              style: TextStyle(
-                                                color: _getStatusColor(maintenance.status),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Costo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(
-                                          maintenance.checklistItems.isEmpty
-                                              ? const Text('-')
-                                              : Row(
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 50,
-                                                      child: LinearProgressIndicator(
-                                                        value: maintenance.checklistProgress / 100,
-                                                        backgroundColor: Colors.grey[300],
-                                                        color: AppColors.primary,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text('${maintenance.checklistProgress}%'),
-                                                  ],
-                                                ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                        DataCell(
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-                                                onPressed: () => _showMaintenanceDialog(maintenance: maintenance),
-                                                tooltip: 'Editar',
-                                              ),
-                                              if (maintenance.isCompleted && !maintenance.isApproved && !maintenance.isRejected)
-                                                IconButton(
-                                                  icon: const Icon(Icons.check_circle, color: AppColors.success),
-                                                  onPressed: () => _approveMaintenance(maintenance),
-                                                  tooltip: 'Aprobar',
-                                                ),
-                                              if (maintenance.isCompleted && !maintenance.isApproved && !maintenance.isRejected)
-                                                IconButton(
-                                                  icon: const Icon(Icons.cancel, color: AppColors.error),
-                                                  onPressed: () => _rejectMaintenance(maintenance),
-                                                  tooltip: 'Rechazar',
-                                                ),
-                                            ],
-                                          ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text('Progreso', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                                         ),
-                                      ]);
-                                    }).toList(),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                  // Rows
+                                  Expanded(
+                                    child: ListView.builder(
+                                      itemCount: _paginatedMaintenances.length,
+                                      itemBuilder: (context, index) {
+                                        final maintenance = _paginatedMaintenances[index];
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          decoration: BoxDecoration(
+                                            border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              // Título (flex: 3)
+                                              Expanded(
+                                                flex: 3,
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      maintenance.title,
+                                                      style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
+                                                      maxLines: 2,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                    if (maintenance.isOverdue)
+                                                      Row(
+                                                        children: const [
+                                                          Icon(Icons.warning, size: 12, color: Colors.red),
+                                                          SizedBox(width: 4),
+                                                          Text('Vencido', style: TextStyle(fontSize: 10, color: Colors.red)),
+                                                        ],
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                              // Tipo (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: _getTypeColor(maintenance.type).withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: _getTypeColor(maintenance.type)),
+                                                  ),
+                                                  child: Text(
+                                                    maintenance.type.displayName,
+                                                    style: TextStyle(
+                                                      color: _getTypeColor(maintenance.type),
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ),
+                                              // Proveedor (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  maintenance.providerName,
+                                                  style: const TextStyle(fontSize: 11),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              // Fecha (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  DateFormat('dd/MM/yyyy').format(maintenance.scheduledDate),
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                              ),
+                                              // Costo (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: Text(
+                                                  '\$${maintenance.cost.toStringAsFixed(0)}',
+                                                  style: const TextStyle(fontSize: 11),
+                                                ),
+                                              ),
+                                              // Estado (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: _getStatusColor(maintenance.status).withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: _getStatusColor(maintenance.status)),
+                                                  ),
+                                                  child: Text(
+                                                    maintenance.status.displayName,
+                                                    style: TextStyle(
+                                                      color: _getStatusColor(maintenance.status),
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w500,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ),
+                                              // Progreso (flex: 2)
+                                              Expanded(
+                                                flex: 2,
+                                                child: maintenance.checklistItems.isEmpty
+                                                    ? const Text('-', style: TextStyle(fontSize: 11))
+                                                    : Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: LinearProgressIndicator(
+                                                              value: maintenance.checklistProgress / 100,
+                                                              backgroundColor: Colors.grey[300],
+                                                              color: AppColors.primary,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 4),
+                                                          Text(
+                                                            '${maintenance.checklistProgress}%',
+                                                            style: const TextStyle(fontSize: 10),
+                                                          ),
+                                                        ],
+                                                      ),
+                                              ),
+                                              // Acciones (flex: 1)
+                                              Expanded(
+                                                flex: 1,
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    IconButton(
+                                                      icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
+                                                      onPressed: () => _showMaintenanceDialog(maintenance: maintenance),
+                                                      tooltip: 'Editar',
+                                                      padding: EdgeInsets.zero,
+                                                      constraints: const BoxConstraints(),
+                                                    ),
+                                                    if (maintenance.isCompleted && !maintenance.isApproved && !maintenance.isRejected) ...[
+                                                      const SizedBox(width: 4),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+                                                        onPressed: () => _approveMaintenance(maintenance),
+                                                        tooltip: 'Aprobar',
+                                                        padding: EdgeInsets.zero,
+                                                        constraints: const BoxConstraints(),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      IconButton(
+                                                        icon: const Icon(Icons.cancel, color: AppColors.error, size: 18),
+                                                        onPressed: () => _rejectMaintenance(maintenance),
+                                                        tooltip: 'Rechazar',
+                                                        padding: EdgeInsets.zero,
+                                                        constraints: const BoxConstraints(),
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                   ),
                   
