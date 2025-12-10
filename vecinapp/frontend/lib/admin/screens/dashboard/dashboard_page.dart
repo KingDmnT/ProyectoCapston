@@ -299,26 +299,26 @@ class _DashboardViewState extends State<_DashboardView> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // KPIs superiores
           _buildKPIRow(),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           
           // Gráfico de gastos comunes por mes
           _buildMonthlyExpensesChart(),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           
           // Fila: Morosidad y Próximos Mantenimientos
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _buildMorosidadCard()),
-              const SizedBox(width: 20),
+              const SizedBox(width: 12),
               Expanded(child: _buildProximosMantenimientosCard()),
             ],
           ),
@@ -332,9 +332,9 @@ class _DashboardViewState extends State<_DashboardView> {
     return Row(
       children: [
         Expanded(child: _buildResidentesActivosKPI()),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(child: _buildUnidadesVigentesKPI()),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(child: _buildGastosNotificadosKPI()),
       ],
     );
@@ -416,39 +416,39 @@ class _DashboardViewState extends State<_DashboardView> {
   }) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: color, size: 28),
+                  child: Icon(icon, color: color, size: 20),
                 ),
                 const Spacer(),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               value,
               style: GoogleFonts.inter(
-                fontSize: 32,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               title,
               style: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: 12,
                 color: Colors.grey[600],
               ),
             ),
@@ -462,23 +462,23 @@ class _DashboardViewState extends State<_DashboardView> {
   Widget _buildMonthlyExpensesChart() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Gastos Comunes Generados (Últimos 12 Meses)',
               style: GoogleFonts.inter(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SizedBox(
-              height: 200,
+              height: 180,
               child: StreamBuilder<QuerySnapshot>(
                 stream: _firestore
                     .collection('communities')
@@ -623,9 +623,9 @@ class _DashboardViewState extends State<_DashboardView> {
   Widget _buildMorosidadCard() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: StreamBuilder<QuerySnapshot>(
           stream: _firestore
               .collection('communities')
@@ -658,23 +658,23 @@ class _DashboardViewState extends State<_DashboardView> {
                 Text(
                   'Morosidad',
                   style: GoogleFonts.inter(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: warningRed.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.warning_amber, color: warningRed, size: 32),
+                      child: const Icon(Icons.warning_amber, color: warningRed, size: 24),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,7 +682,7 @@ class _DashboardViewState extends State<_DashboardView> {
                           Text(
                             '$unidadesEnMora',
                             style: GoogleFonts.inter(
-                              fontSize: 36,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
                               color: warningRed,
                             ),
@@ -690,14 +690,14 @@ class _DashboardViewState extends State<_DashboardView> {
                           Text(
                             'Unidades en Mora',
                             style: GoogleFonts.inter(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             'Monto: \$${NumberFormat('#,###').format(montoMorosidad)}',
                             style: GoogleFonts.inter(
-                              fontSize: 13,
+                              fontSize: 11,
                               color: Colors.grey[600],
                             ),
                           ),
@@ -718,27 +718,27 @@ class _DashboardViewState extends State<_DashboardView> {
   Widget _buildProximosMantenimientosCard() {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.build_circle, color: accentGreen, size: 24),
-                const SizedBox(width: 12),
+                Icon(Icons.build_circle, color: accentGreen, size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Próximos Mantenimientos',
                   style: GoogleFonts.inter(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             StreamBuilder<QuerySnapshot>(
               stream: _firestore
                   .collection('communities')
