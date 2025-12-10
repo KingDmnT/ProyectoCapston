@@ -36,6 +36,8 @@ class UnitExpense(BaseModel):
     resident_name: Optional[str] = None  # Nombre del residente
     resident_email: Optional[str] = None  # Email del residente
     pdf_url: Optional[str] = None  # URL del PDF generado
+    is_paid: bool = False  # Estado de pago
+    payment_date: Optional[datetime] = None  # Fecha de pago
 
 # Schemas principales
 class CommonExpenseBase(BaseModel):

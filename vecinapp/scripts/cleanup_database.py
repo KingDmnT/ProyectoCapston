@@ -27,24 +27,23 @@ db = google_firestore.Client(
 )
 
 def delete_collection(collection_ref, batch_size=100):
-    """Elimina una colección completa incluyendo subcollections"""
+    """Elimina una colección completa incluyendo subcollections y documentos fantasmas"""
     deleted = 0
-    docs = collection_ref.limit(batch_size).stream()
+    # list_documents() retorna referencias, incluyendo documentos que no existen pero tienen subcolecciones
+    # Esto es crítico para limpiar 'ghost documents' que stream() no ve.
+    docs = collection_ref.list_documents(page_size=batch_size)
     
-    for doc in docs:
-        # Eliminar subcollections conocidas
-        subcollections = ['units', 'maintenances', 'common_expenses']
-        for subcoll_name in subcollections:
-            subcoll_ref = doc.reference.collection(subcoll_name)
+    for doc_ref in docs:
+        # Eliminar subcollections de forma recursiva
+        for subcoll_ref in doc_ref.collections():
             delete_collection(subcoll_ref, batch_size)
         
         # Eliminar el documento
-        doc.reference.delete()
+        doc_ref.delete()
         deleted += 1
-    
-    if deleted >= batch_size:
-        # Recursión para eliminar más documentos
-        return deleted + delete_collection(collection_ref, batch_size)
+        
+        if deleted % 100 == 0:
+            print(f"      ... {deleted} docs eliminados en colección actual")
     
     return deleted
 

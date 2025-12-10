@@ -8,6 +8,8 @@ class ApiService {
   // URL base del backend desde .env
   static final String _baseUrl = dotenv.env['BACKEND_URL'] ?? 'http://127.0.0.1:8000';
   
+  static String get baseUrl => _baseUrl; // Getter público para acceder desde otros servicios
+  
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
   // Obtener headers con token de autenticación
