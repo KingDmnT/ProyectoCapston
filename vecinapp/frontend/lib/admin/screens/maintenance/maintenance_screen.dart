@@ -394,16 +394,17 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                 child: SingleChildScrollView(
                                   child: DataTable(
                                     headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-                                    dataRowHeight: 70,
+                                    dataRowHeight: 60,
+                                    columnSpacing: 16,
                                     columns: const [
-                                      DataColumn(label: Text('Título', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Proveedor', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Costo', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Progreso', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      DataColumn(label: Text('Título', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Tipo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Proveedor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Fecha', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Costo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Estado', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Progreso', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                      DataColumn(label: Text('Acciones', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                     ],
                                     rows: _paginatedMaintenances.map((maintenance) {
                                       return DataRow(cells: [
@@ -414,7 +415,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                             children: [
                                               Text(
                                                 maintenance.title,
-                                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
                                               ),
                                               if (maintenance.isOverdue)
                                                 Row(
@@ -445,12 +446,12 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                                             ),
                                           ),
                                         ),
-                                        DataCell(Text(maintenance.providerName)),
+                                        DataCell(Text(maintenance.providerName, style: const TextStyle(fontSize: 11))),
                                         DataCell(
-                                          Text(DateFormat('dd/MM/yyyy').format(maintenance.scheduledDate)),
+                                          Text(DateFormat('dd/MM/yyyy').format(maintenance.scheduledDate), style: const TextStyle(fontSize: 11)),
                                         ),
                                         DataCell(
-                                          Text('\$${maintenance.cost.toStringAsFixed(0)}'),
+                                          Text('\$${maintenance.cost.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11)),
                                         ),
                                         DataCell(
                                           Container(

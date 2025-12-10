@@ -313,13 +313,15 @@ class _DashboardViewState extends State<_DashboardView> {
           
           const SizedBox(height: 12),
           
-          // Fila: Morosidad y Próximos Mantenimientos
+          // Fila: Morosidad, Mantenimientos Programados y Pendientes
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: _buildMorosidadCard()),
               const SizedBox(width: 12),
-              Expanded(child: _buildProximosMantenimientosCard()),
+              Expanded(child: _buildMantenimientosProgramadosCard()),
+              const SizedBox(width: 12),
+              Expanded(child: _buildMantenimientosPendientesCard()),
             ],
           ),
         ],
@@ -806,6 +808,237 @@ class _DashboardViewState extends State<_DashboardView> {
                                     color: Colors.grey[600],
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Mantenimientos Programados (fechas futuras)
+  Widget _buildMantenimientosProgramadosCard() {
+    final now = DateTime.now();
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.calendar_today, color: Colors.blue, size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Programados',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('communities')
+                  .doc(_communityId)
+                  .collection('maintenances')
+                  .where('scheduled_date', isGreaterThan: Timestamp.fromDate(now))
+                  .orderBy('scheduled_date')
+                  .limit(3)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error', style: GoogleFonts.inter(color: Colors.red, fontSize: 10));
+                }
+                
+                if (!snapshot.hasData) {
+                  return const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: primaryPurple),
+                  );
+                }
+
+                final maintenances = snapshot.data!.docs;
+                if (maintenances.isEmpty) {
+                  return Text(
+                    'No hay mantenimientos programados a futuro',
+                    style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 11),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: maintenances.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final title = data['title'] as String? ?? 'Sin título';
+                    final scheduledDate = (data['scheduled_date'] as Timestamp?)?.toDate();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (scheduledDate != null)
+                                  Text(
+                                    DateFormat('dd/MM/yyyy').format(scheduledDate),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Mantenimientos Pendientes  
+  Widget _buildMantenimientosPendientesCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.pending_actions, color: accentYellow, size: 18),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Pendientes',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            StreamBuilder<QuerySnapshot>(
+              stream: _firestore
+                  .collection('communities')
+                  .doc(_communityId)
+                  .collection('maintenances')
+                  .where('status', isEqualTo: 'pendiente')
+                  .limit(3)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Error', style: GoogleFonts.inter(color: Colors.red, fontSize: 10));
+                }
+                
+                if (!snapshot.hasData) {
+                  return const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: primaryPurple),
+                  );
+                }
+
+                final maintenances = snapshot.data!.docs;
+                if (maintenances.isEmpty) {
+                  return Text(
+                    'No hay mantenimientos pendientes',
+                    style: GoogleFonts.inter(color: Colors.grey[600], fontSize: 11),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: maintenances.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final title = data['title'] as String? ?? 'Sin título';
+                    final scheduledDate = (data['scheduled_date'] as Timestamp?)?.toDate();
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 5,
+                            height: 5,
+                            decoration: const BoxDecoration(
+                              color: accentYellow,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (scheduledDate != null)
+                                  Text(
+                                    DateFormat('dd/MM/yyyy').format(scheduledDate),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 9,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
