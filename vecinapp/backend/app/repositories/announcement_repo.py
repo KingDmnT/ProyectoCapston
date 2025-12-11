@@ -61,8 +61,8 @@ class AnnouncementRepository:
         if show_in_banner is not None:
             query = query.where('show_in_banner', '==', show_in_banner)
         
-        # Ordenar por fecha de creación descendente
-        query = query.order_by('created_at', direction=firestore.Query.DESCENDING)
+        # NO ordenar en Firestore para evitar índice compuesto
+        # Se ordenará en Python después
         
         # Ejecutar query
         docs = query.stream()
@@ -75,12 +75,19 @@ class AnnouncementRepository:
             # Filtrar anuncios expirados si is_active es True
             if is_active:
                 expires_at = data.get('expires_at')
-                if expires_at and datetime.now() > expires_at:
-                    # Marcar como inactivo si expiró
-                    doc.reference.update({'is_active': False})
-                    continue
+                if expires_at:
+                    # Asegurar que ambas fechas sean timezone-aware para comparación
+                    from datetime import timezone
+                    now = datetime.now(timezone.utc)
+                    if now > expires_at:
+                        # Marcar como inactivo si expiró
+                        doc.reference.update({'is_active': False})
+                        continue
             
             announcements.append(Announcement(**data))
+        
+        # Ordenar en Python por fecha de creación descendente
+        announcements.sort(key=lambda x: x.created_at, reverse=True)
         
         return announcements
     

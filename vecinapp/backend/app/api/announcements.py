@@ -103,8 +103,14 @@ def get_active_banners(
     Endpoint público - no requiere autenticación.
     """
     try:
-        return announcement_repo.get_active_banners(community_id)
+        print(f"🔍 Buscando banners para community_id: {community_id}")
+        result = announcement_repo.get_active_banners(community_id)
+        print(f"✅ Encontrados {len(result)} banners")
+        return result
     except Exception as e:
+        print(f"❌ Error en get_active_banners: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error al obtener banners: {str(e)}"
