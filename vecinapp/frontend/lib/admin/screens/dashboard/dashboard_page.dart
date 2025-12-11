@@ -170,9 +170,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _buildMenuItem(0, Icons.home, 'Inicio'),
           _buildMenuItem(1, Icons.location_city, 'Comunidades'),
           _buildMenuItem(2, Icons.people, 'Usuarios'),
-          _buildMenuItem(3, Icons.build, 'Mantenimiento'),
-          _buildMenuItem(4, Icons.receipt_long, 'Gastos Comunes'),
-          _buildMenuItem(5, Icons.qr_code_scanner, 'Visitas'),
+          _buildMenuItem(3, Icons.warning_amber, 'Incidencias'),
+          _buildMenuItem(4, Icons.event_available, 'Reservas'),
+          _buildMenuItem(5, Icons.build, 'Mantenimiento'),
+          _buildMenuItem(6, Icons.receipt_long, 'Gastos Comunes'),
+          _buildMenuItem(7, Icons.qr_code_scanner, 'Visitas'),
           
           const Spacer(),
           
