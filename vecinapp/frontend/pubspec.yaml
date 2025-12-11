@@ -41,6 +41,7 @@ dependencies:
   # Gestión de Estado y Configuración
   provider: ^6.1.2
   flutter_dotenv: ^6.0.0
+  timeago: ^3.7.0
 
 dev_dependencies:
   flutter_test:

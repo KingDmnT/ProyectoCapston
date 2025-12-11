@@ -712,6 +712,78 @@ def create_common_expenses_year(community_id, community_name, admin_uid, residen
     
     print(f"\n✅ 13 períodos de gastos comunes creados")
 
+def create_announcements(community_id, admin_uid, admin_name):
+    """Crea anuncios de ejemplo para la comunidad"""
+    print(f"\n📢 Creando anuncios de ejemplo...\n")
+    
+    announcements_data = [
+        {
+            "title": "Asamblea General Extraordinaria",
+            "message": "Se realizará la asamblea general extraordinaria este viernes 15 a las 19:00 hrs en el salón de eventos. Se tratarán temas importantes sobre mejoras al edificio.",
+            "priority": "warning",
+            "show_in_banner": True,
+            "expires_at": datetime.now() + timedelta(days=5),
+        },
+        {
+            "title": "Mantención de Piscina - Cierre Temporal",
+            "message": "La piscina estará cerrada por mantenimiento preventivo el día sábado 16 de diciembre desde las 08:00 hasta las 16:00 hrs. Disculpen las molestias.",
+            "priority": "info",
+            "show_in_banner": True,  
+            "expires_at": datetime.now() + timedelta(days=7),
+        },
+        {
+            "title": "Nuevo Gasto Común Disponible",
+            "message": "Ya está disponible para revisión y pago el gasto común de noviembre 2025. Puede revisar el detalle en la sección 'Mis Gastos'.",
+            "priority": "info",
+            "show_in_banner": False,
+            "expires_at": datetime.now() + timedelta(days=30),
+        },
+        {
+            "title": "Corte de Agua Programado", 
+            "message": "⚠️ URGENTE: Corte de agua programado para el martes 12 desde las 09:00 hasta las 14:00 hrs por reparación de cañerías principales. Por favor, almacenar agua con anticipación.",
+            "priority": "urgent",
+            "show_in_banner": True,
+            "expires_at": datetime.now() + timedelta(days=3),
+        },
+        {
+            "title": "Horarios de Verano - Quincho y Piscina",
+            "message": "A partir del 1 de diciembre rigen los nuevos horarios de verano. Quincho: 08:00-22:00 hrs. Piscina: 08:00-21:00 hrs. Se solicita respetar los horarios.",
+            "priority": "info",
+            "show_in_banner": True,
+            "expires_at": datetime.now() + timedelta(days=60),
+        },
+    ]
+    
+    count = 0
+    announcements_ref = db.collection('communities').document(community_id).collection('announcements')
+    
+    for ann_data in announcements_data:
+        announcement = {
+            "title": ann_data["title"],
+            "message": ann_data["message"],
+            "priority": ann_data["priority"],
+            "show_in_banner": ann_data["show_in_banner"],
+            "community_id": community_id,
+            "created_by": admin_uid,
+            "created_by_name": admin_name,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now(),
+            "is_active": True,
+            "expires_at": ann_data["expires_at"],
+        }
+        
+        ann_ref = announcements_ref.document()
+        announcement["id"] = ann_ref.id
+        ann_ref.set(announcement)
+        
+        priority_emoji = {"info": "📢", "warning": "⚠️", "urgent": "🚨"}.get(ann_data["priority"], "📢")
+        banner_str = " [BANNER]" if ann_data["show_in_banner"] else ""
+        print(f"   {priority_emoji} {ann_data['title']}{banner_str}")
+        count += 1
+    
+    print(f"\n✅ {count} anuncios creados")
+    return count
+
 def seed_condominio_palmas():
     """Función principal para poblar Condominio Las Palmas"""
     print("\n" + "="*70)
@@ -764,6 +836,9 @@ def seed_condominio_palmas():
     # 5. Crear gastos comunes con morosidad
     create_common_expenses_year(community_id, community_data['name'], admin_uid, residents_data)
     
+    # 6. Crear anuncios de ejemplo
+    create_announcements(community_id, admin_uid, "Administrador Las Palmas")
+    
     print("\n" + "="*70)
     print("🎉 ¡SEED COMPLETADO!")
     print("="*70)
@@ -778,6 +853,7 @@ def seed_condominio_palmas():
     print(f"   - Mantenciones: 13 meses de datos")
     print(f"   - Gastos comunes: 13 períodos (Nov 2024 - Nov 2025)")
     print(f"   - Morosidad: ~15%")
+    print(f"   - Anuncios: 5")
     
     print("\n🔐 CREDENCIALES:")
     print(f"   👨‍💼 ADMINISTRADOR:")

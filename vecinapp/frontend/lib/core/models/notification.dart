@@ -3,8 +3,11 @@
 enum NotificationType {
   incidentCreated,
   incidentUpdated,
+  incidentComment,
   reservationCreated,
   reservationUpdated,
+  announcement,
+  commonExpensePublished,
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -14,10 +17,16 @@ extension NotificationTypeExtension on NotificationType {
         return 'incident_created';
       case NotificationType.incidentUpdated:
         return 'incident_updated';
+      case NotificationType.incidentComment:
+        return 'incident_comment';
       case NotificationType.reservationCreated:
         return 'reservation_created';
       case NotificationType.reservationUpdated:
         return 'reservation_updated';
+      case NotificationType.announcement:
+        return 'announcement';
+      case NotificationType.commonExpensePublished:
+        return 'common_expense_published';
     }
   }
 
@@ -27,10 +36,16 @@ extension NotificationTypeExtension on NotificationType {
         return NotificationType.incidentCreated;
       case 'incident_updated':
         return NotificationType.incidentUpdated;
+      case 'incident_comment':
+        return NotificationType.incidentComment;
       case 'reservation_created':
         return NotificationType.reservationCreated;
       case 'reservation_updated':
         return NotificationType.reservationUpdated;
+      case 'announcement':
+        return NotificationType.announcement;
+      case 'common_expense_published':
+        return NotificationType.commonExpensePublished;
       default:
         return NotificationType.incidentCreated;
     }
@@ -40,10 +55,15 @@ extension NotificationTypeExtension on NotificationType {
     switch (this) {
       case NotificationType.incidentCreated:
       case NotificationType.incidentUpdated:
+      case NotificationType.incidentComment:
         return '⚠️';
       case NotificationType.reservationCreated:
       case NotificationType.reservationUpdated:
         return '📅';
+      case NotificationType.announcement:
+        return '📢';
+      case NotificationType.commonExpensePublished:
+        return '💵';
     }
   }
 }

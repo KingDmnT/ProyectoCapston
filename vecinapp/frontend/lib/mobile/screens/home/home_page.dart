@@ -5,12 +5,17 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
 import 'package:vecinapp/core/models/user.dart';
+import 'package:vecinapp/core/models/announcement.dart';
+import 'package:vecinapp/core/models/notification.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vecinapp/core/services/common_expense_service.dart';
+import 'package:vecinapp/core/services/announcement_service.dart';
+import 'package:vecinapp/core/services/notification_service.dart';
 import 'package:vecinapp/mobile/screens/my_expenses_page.dart';
 import 'package:vecinapp/mobile/screens/mis_incidentes_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 // Pantalla principal móvil (para residentes)
 class MobileHomePage extends StatefulWidget {
@@ -149,31 +154,30 @@ class _DashboardTab extends StatelessWidget {
                       onPressed: () => _showNotifications(context),
                     ),
                     // Badge con número de notificaciones
-                    if (_notificaciones.isNotEmpty)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        child: const Text(
+                          '3',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '${_notificaciones.length}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
+                    ),
                   ],
                 ),
               ],
@@ -292,38 +296,102 @@ class _DashboardTab extends StatelessWidget {
   }
 }
 
-// Notificaciones de ejemplo (local, a futuro será Firebase)
-final List<Map<String, dynamic>> _notificaciones = [
-  {
-    'titulo': 'Asamblea General',
-    'descripcion': 'Se realizará la asamblea general este viernes a las 18:00 hrs',
-    'fecha': '2 días ago',
-    'icono': Icons.groups,
-    'leida': false,
-  },
-  {
-    'titulo': 'Mantención Piscina',
-    'descripcion': 'La piscina estará cerrada por limpieza el día sábado',
-    'fecha': '1 semana ago',
-    'icono': Icons.pool,
-    'leida': false,
-  },
-  {
-    'titulo': 'Nuevo Gasto Común',
-    'descripcion': 'Ya está disponible el gasto común de este mes',
-    'fecha': '3 días ago',
-    'icono': Icons.attach_money,
-    'leida': true,
-  },
-];
 
-// Función para mostrar notificaciones
+// Función para mostrar notificaciones (ahora con datos reales)
 void _showNotifications(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (context) => Container(
+    builder: (context) => const _NotificationsModal(),
+  );
+}
+
+// Modal de notificaciones con datos reales
+class _NotificationsModal extends StatefulWidget {
+  const _NotificationsModal();
+
+  @override
+  State<_NotificationsModal> createState() => _NotificationsModalState();
+}
+
+class _NotificationsModalState extends State<_NotificationsModal> {
+  final _notificationService = NotificationService();
+  List<AppNotification> _notifications = [];
+  bool _isLoading = true;
+  String? _communityId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+    // Inicializar timeago en español
+    timeago.setLocaleMessages('es', timeago.EsMessages());
+  }
+
+  Future<void> _loadNotifications() async {
+    try {
+      final authService = AuthService();
+      final user = authService.currentUser;
+      
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Obtener community_id del usuario
+      final db = FirebaseFirestore.instance;
+      final userDoc = await db.collection('users').doc(user.uid).get();
+      
+      if (!userDoc.exists) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final userData = userDoc.data();
+      _communityId = userData?['community_id'] as String? ?? 
+                     userData?['communityId'] as String?;
+
+      if (_communityId == null || _communityId!.isEmpty) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Obtener notificaciones
+      final notifications = await _notificationService.getMyNotifications(
+        communityId: _communityId!,
+        limit: 50,
+      );
+
+      setState(() {
+        _notifications = notifications;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando notificaciones: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  IconData _getIconForType(NotificationType type) {
+    switch (type) {
+      case NotificationType.incidentCreated:
+      case NotificationType.incidentUpdated:
+      case NotificationType.incidentComment:
+        return Icons.warning_amber;
+      case NotificationType.reservationCreated:
+      case NotificationType.reservationUpdated:
+        return Icons.event;
+      case NotificationType.announcement:
+        return Icons.campaign;
+      case NotificationType.commonExpensePublished:
+        return Icons.attach_money;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -367,107 +435,109 @@ void _showNotifications(BuildContext context) {
           ),
           // Lista de notificaciones
           Expanded(
-            child: _notificaciones.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text(
-                          'No tienes notificaciones',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _notificaciones.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final notif = _notificaciones[index];
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: notif['leida'] ? Colors.grey[50] : AppColors.primary.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: notif['leida'] ? Colors.grey[200]! : AppColors.primary.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _notifications.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                notif['icono'],
-                                color: AppColors.primary,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          notif['titulo'],
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: notif['leida'] ? Colors.grey[600] : AppColors.textPrimary,
-                                          ),
-                                        ),
-                                      ),
-                                      if (!notif['leida'])
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    notif['descripcion'],
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    notif['fecha'],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            Icon(Icons.notifications_off_outlined, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No tienes notificaciones',
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _notifications.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final notif = _notifications[index];
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: notif.isRead ? Colors.grey[50] : AppColors.primary.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: notif.isRead ? Colors.grey[200]! : AppColors.primary.withOpacity(0.2),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    _getIconForType(notif.type),
+                                    color: AppColors.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              notif.title,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: notif.isRead ? Colors.grey[600] : AppColors.textPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                          if (!notif.isRead)
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: const BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        notif.message,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        timeago.format(notif.createdAt, locale: 'es'),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[400],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 // Tab de menú con opciones del residente
@@ -878,37 +948,138 @@ class _GastoComunCardState extends State<_GastoComunCard> {
   }
 }
 
-// Carrusel de noticias
-class _NewsCarousel extends StatelessWidget {
+// Carrusel de anuncios (carga datos reales de la API)
+class _NewsCarousel extends StatefulWidget {
   const _NewsCarousel();
 
-  final List<Map<String, dynamic>> news = const [
-    {
-      'text': 'Asamblea General\nEste Viernes 18:00',
-      'colors': [AppColors.primary, Color(0xFF6A75E6)],
-      'icon': Icons.groups,
-    },
-    {
-      'text': 'Mantención Piscina\nCerrada por limpieza',
-      'colors': [Color(0xFFFF9966), Color(0xFFFF5E62)],
-      'icon': Icons.pool,
-    },
-    {
-      'text': 'Gastos Comunes\nVencimiento día 28',
-      'colors': [Color(0xFF11998e), Color(0xFF38ef7d)],
-      'icon': Icons.attach_money,
-    },
-  ];
+  @override
+  State<_NewsCarousel> createState() => _NewsCarouselState();
+}
+
+class _NewsCarouselState extends State<_NewsCarousel> {
+  final _announcementService = AnnouncementService();
+  List<Announcement> _announcements = [];
+  bool _isLoading = true;
+  String? _communityId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAnnouncements();
+  }
+
+  Future<void> _loadAnnouncements() async {
+    try {
+      final authService = AuthService();
+      final user = authService.currentUser;
+      
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Obtener token de autenticación
+      final token = await user.getIdToken();
+
+      // Obtener community_id del usuario
+      final db = FirebaseFirestore.instance;
+      final userDoc = await db.collection('users').doc(user.uid).get();
+      
+      if (!userDoc.exists) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final userData = userDoc.data();
+      // Intentar ambos formatos: community_id y communityId
+      _communityId = userData?['community_id'] as String? ?? 
+                     userData?['communityId'] as String?;
+
+      if (_communityId == null || _communityId!.isEmpty) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Obtener anuncios activos para banner
+      final announcements = await _announcementService.getActiveBanners(
+        communityId: _communityId!,
+        token: token,
+      );
+
+      setState(() {
+        _announcements = announcements;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error cargando anuncios: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<Color> _getPriorityColors(AnnouncementPriority priority) {
+    switch (priority) {
+      case AnnouncementPriority.info:
+        return [AppColors.primary, const Color(0xFF6A75E6)];
+      case AnnouncementPriority.warning:
+        return [const Color(0xFFFF9966), const Color(0xFFFF5E62)];
+      case AnnouncementPriority.urgent:
+        return [const Color(0xFFFF5252), const Color(0xFFD32F2F)];
+    }
+  }
+
+  IconData _getPriorityIcon(AnnouncementPriority priority) {
+    switch (priority) {
+      case AnnouncementPriority.info:
+        return Icons.campaign;
+      case AnnouncementPriority.warning:
+        return Icons.warning_amber;
+      case AnnouncementPriority.urgent:
+        return Icons.error;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return SizedBox(
+        width: double.infinity,
+        height: 140,
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_announcements.isEmpty) {
+      return SizedBox(
+        width: double.infinity,
+        height: 140,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Center(
+            child: Text(
+              'No hay anuncios activos',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       height: 140,
       child: CarouselSlider.builder(
-        itemCount: news.length,
+        itemCount: _announcements.length,
         itemBuilder: (context, index, realIndex) {
-          final item = news[index];
+          final announcement = _announcements[index];
+          final colors = _getPriorityColors(announcement.priority);
+          final icon = _getPriorityIcon(announcement.priority);
+          
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 5),
             decoration: BoxDecoration(
@@ -916,11 +1087,11 @@ class _NewsCarousel extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
-                colors: item['colors'] as List<Color>,
+                colors: colors,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (item['colors'] as List<Color>)[0].withOpacity(0.3),
+                  color: colors[0].withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 )
@@ -931,15 +1102,17 @@ class _NewsCarousel extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(item['icon'] as IconData, color: Colors.white, size: 40),
+                  Icon(icon, color: Colors.white, size: 40),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          item['text'] as String,
+                          announcement.title,
                           textAlign: TextAlign.right,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.lato(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -947,18 +1120,18 @@ class _NewsCarousel extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 5),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              "Ver más",
-                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                              announcement.priority.emoji,
+                              style: const TextStyle(fontSize: 12),
                             ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              color: Colors.white70,
-                              size: 16,
-                            )
+                            const SizedBox(width: 4),
+                            Text(
+                              announcement.priority.displayName,
+                              style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
                           ],
                         )
                       ],
@@ -971,6 +1144,7 @@ class _NewsCarousel extends StatelessWidget {
         },
         options: CarouselOptions(
           autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 5),
           enlargeCenterPage: true,
           viewportFraction: 0.75,
           aspectRatio: 2.0,

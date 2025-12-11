@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:vecinapp/admin/screens/incidents/incidents_screen.dart';
 import 'package:vecinapp/admin/screens/reservations/reservations_screen.dart';
+import 'package:vecinapp/admin/screens/announcements/announcements_screen.dart';
 
 /// Dashboard administrativo con diseño corporativo morado y datos reales
 class AdminDashboardPage extends StatefulWidget {
@@ -87,6 +88,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     const CommunitiesScreen(),
     const UsersScreen(),
     const IncidentsScreen(),
+    const AnnouncementsScreen(),
     const ReservationsScreen(),
     const MaintenanceScreen(),
     const CommonExpensesScreen(),
@@ -98,6 +100,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     "Gestión de Comunidades",
     "Gestión de Usuarios",
     "Gestión de Incidentes",
+    "Gestión de Anuncios",
     "Gestión de Reservas",
     "Gestión de Mantenimientos",
     "Gestión de Gastos Comunes",
@@ -171,10 +174,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _buildMenuItem(1, Icons.location_city, 'Comunidades'),
           _buildMenuItem(2, Icons.people, 'Usuarios'),
           _buildMenuItem(3, Icons.warning_amber, 'Incidencias'),
-          _buildMenuItem(4, Icons.event_available, 'Reservas'),
-          _buildMenuItem(5, Icons.build, 'Mantenimiento'),
-          _buildMenuItem(6, Icons.receipt_long, 'Gastos Comunes'),
-          _buildMenuItem(7, Icons.qr_code_scanner, 'Visitas'),
+          _buildMenuItem(4, Icons.campaign, 'Anuncios'),
+          _buildMenuItem(5, Icons.event_available, 'Reservas'),
+          _buildMenuItem(6, Icons.build, 'Mantenimiento'),
+          _buildMenuItem(7, Icons.receipt_long, 'Gastos Comunes'),
+          _buildMenuItem(8, Icons.qr_code_scanner, 'Visitas'),
           
           const Spacer(),
           

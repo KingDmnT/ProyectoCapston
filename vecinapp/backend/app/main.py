@@ -14,6 +14,7 @@ from app.api import common_expense
 from app.api import incidents
 from app.api import reservations
 from app.api import notifications
+from app.api import announcements
 
 app = FastAPI(
     title="Condominio System API",
@@ -72,6 +73,9 @@ app.include_router(reservations.router, prefix="/reservations", tags=["Reservati
 
 # Módulo de Notificaciones
 app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+
+# Módulo de Anuncios
+app.include_router(announcements.router, prefix="/announcements", tags=["Announcements"])
 
 # --- Health Check ---
 @app.get("/")

@@ -109,6 +109,7 @@ class _IncidentsScreenState extends State<IncidentsScreen> {
     }
   }
   
+  
   Color _getPriorityColor(IncidentPriority priority) {
     switch (priority) {
       case IncidentPriority.baja:
@@ -117,6 +118,8 @@ class _IncidentsScreenState extends State<IncidentsScreen> {
         return Colors.orange;
       case IncidentPriority.alta:
         return Colors.red;
+      case IncidentPriority.critica:
+        return Colors.red.shade900;
     }
   }
 

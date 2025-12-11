@@ -6,8 +6,11 @@ from enum import Enum
 class NotificationType(str, Enum):
     INCIDENT_CREATED = "incident_created"
     INCIDENT_UPDATED = "incident_updated"
+    INCIDENT_COMMENT = "incident_comment"
     RESERVATION_CREATED = "reservation_created"
     RESERVATION_UPDATED = "reservation_updated"
+    ANNOUNCEMENT = "announcement"
+    COMMON_EXPENSE_PUBLISHED = "common_expense_published"
 
 class NotificationBase(BaseModel):
     type: NotificationType
