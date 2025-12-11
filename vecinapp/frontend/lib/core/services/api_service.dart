@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // Servicio para comunicación con el backend FastAPI
 class ApiService {
   // URL base del backend desde .env
-  static final String _baseUrl = dotenv.env['BACKEND_URL'] ?? 'http://127.0.0.1:8000';
+  static final String _baseUrl = dotenv.env['BACKEND_URL'] ?? 'http://localhost:8000';
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
@@ -80,6 +80,25 @@ class ApiService {
       return _handleResponse(response);
     } catch (e) {
       print('Error en PUT $endpoint: $e');
+      rethrow;
+    }
+  }
+  
+  // --- PATCH ---
+  Future<dynamic> patch(String endpoint, Map<String, dynamic> body) async {
+    try {
+      final url = Uri.parse('$_baseUrl$endpoint');
+      final headers = await _getHeaders();
+      
+      final response = await http.patch(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      
+      return _handleResponse(response);
+    } catch (e) {
+      print('Error en PATCH $endpoint: $e');
       rethrow;
     }
   }
