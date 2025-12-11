@@ -8,6 +8,7 @@ import 'package:vecinapp/admin/screens/common_expenses/common_expenses_screen.da
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:vecinapp/admin/screens/monitoring/cameras_screen.dart';
 
 /// Dashboard administrativo con diseño corporativo morado y datos reales
 class AdminDashboardPage extends StatefulWidget {
@@ -80,12 +81,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   static const accentYellow = Color(0xFFFFB800);
   static const warningRed = Color(0xFFFF5252);
 
+
+
   List<Widget> get _views => [
     _DashboardView(communityId: _communityId),
     const CommunitiesScreen(),
     const UsersScreen(),
     const MaintenanceScreen(),
     const CommonExpensesScreen(),
+    const CamerasScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
   ];
 
@@ -157,7 +161,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           _buildMenuItem(2, Icons.people, 'Usuarios'),
           _buildMenuItem(3, Icons.build, 'Mantenimiento'),
           _buildMenuItem(4, Icons.receipt_long, 'Gastos Comunes'),
-          _buildMenuItem(5, Icons.qr_code_scanner, 'Visitas'),
+          _buildMenuItem(5, Icons.videocam, 'Seguridad/Cámaras'),
+          _buildMenuItem(6, Icons.qr_code_scanner, 'Visitas'),
           
           const Spacer(),
           

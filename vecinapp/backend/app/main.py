@@ -61,6 +61,10 @@ app.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance
 # Módulo de Gastos Comunes
 app.include_router(common_expense.router, prefix="/common-expenses", tags=["Common Expenses"])
 
+# Módulo de Cámaras
+from app.api import cameras
+app.include_router(cameras.router, prefix="/cameras", tags=["Cameras"])
+
 # --- Health Check ---
 @app.get("/")
 async def root():
