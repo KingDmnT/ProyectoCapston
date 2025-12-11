@@ -63,6 +63,7 @@ enum IncidentPriority {
   baja,
   media,
   alta,
+  critica,
 }
 
 extension IncidentPriorityExtension on IncidentPriority {
@@ -74,6 +75,8 @@ extension IncidentPriorityExtension on IncidentPriority {
         return 'media';
       case IncidentPriority.alta:
         return 'alta';
+      case IncidentPriority.critica:
+        return 'critica';
     }
   }
 
@@ -85,17 +88,21 @@ extension IncidentPriorityExtension on IncidentPriority {
         return 'Media';
       case IncidentPriority.alta:
         return 'Alta';
+      case IncidentPriority.critica:
+        return 'Crítica';
     }
   }
 
   static IncidentPriority fromString(String priorityStr) {
-    switch (priorityStr) {
+    switch (priorityStr.toLowerCase()) {
       case 'baja':
         return IncidentPriority.baja;
       case 'media':
         return IncidentPriority.media;
       case 'alta':
         return IncidentPriority.alta;
+      case 'critica':
+        return IncidentPriority.critica;
       default:
         return IncidentPriority.media;
     }

@@ -57,6 +57,11 @@ class IncidentRepository:
         # Crear documento
         doc_ref = collection.document()
         incident_data['id'] = doc_ref.id
+        
+        # Asegurar que created_by esté presente para filtros
+        if 'created_by' not in incident_data or not incident_data['created_by']:
+            incident_data['created_by'] = user_info.get('id')
+        
         doc_ref.set(incident_data)
         
         return Incident(**incident_data)
@@ -83,8 +88,10 @@ class IncidentRepository:
         if created_by:
             query = query.where('created_by', '==', created_by)
         
-        # Ordenar por fecha de creación descendente
-        query = query.order_by('created_at', direction=firestore.Query.DESCENDING)
+        # Solo ordenar si no hay filtro de created_by (para evitar índice compuesto)
+        # Cuando hay created_by, ordenaremos en memoria después
+        if not created_by:
+            query = query.order_by('created_at', direction=firestore.Query.DESCENDING)
         
         # Ejecutar query
         docs = query.stream()
@@ -93,7 +100,16 @@ class IncidentRepository:
         for doc in docs:
             data = doc.to_dict()
             data['id'] = doc.id
+            
+            # Cargar comentarios para este incidente
+            comments = self.get_comments(community_id, doc.id)
+            data['comments'] = [c.model_dump() for c in comments]
+            
             incidents.append(Incident(**data))
+        
+        # Si usamos created_by, ordenar en memoria
+        if created_by and incidents:
+            incidents.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
         
         return incidents
     
@@ -104,6 +120,11 @@ class IncidentRepository:
         if doc.exists:
             data = doc.to_dict()
             data['id'] = doc.id
+            
+            # Cargar comentarios para este incidente
+            comments = self.get_comments(community_id, doc.id)
+            data['comments'] = [c.model_dump() for c in comments]
+            
             return Incident(**data)
         
         return None

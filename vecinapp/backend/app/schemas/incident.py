@@ -14,6 +14,7 @@ class IncidentPriority(str, Enum):
     BAJA = "baja"
     MEDIA = "media"
     ALTA = "alta"
+    CRITICA = "critica"
 
 class IncidentStatus(str, Enum):
     PENDIENTE = "pendiente"

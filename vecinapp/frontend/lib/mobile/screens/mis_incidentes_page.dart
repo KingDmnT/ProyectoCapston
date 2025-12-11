@@ -6,6 +6,7 @@ import 'package:vecinapp/core/models/incident.dart';
 import 'package:vecinapp/core/services/incident_service.dart';
 import 'package:vecinapp/core/services/auth_service.dart';
 import 'package:intl/intl.dart';
+import 'package:vecinapp/mobile/screens/incident_detail_page.dart';
 
 class MisIncidentesPage extends StatefulWidget {
   const MisIncidentesPage({super.key});
@@ -230,11 +231,27 @@ class _IncidentCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navegar a detalle
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Detalle de: ${incident.title}')),
-            );
+          onTap: () async {
+            // Navegar a detalle
+            final authService = Provider.of<AuthService>(context, listen: false);
+            final userData = await authService.getCurrentUserData();
+            
+            final communityId = userData?.communityId ?? 
+                               (userData?.memberships.isNotEmpty == true 
+                                 ? userData!.memberships[0].communityId 
+                                 : '');
+            
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => IncidentDetailPage(
+                    incidentId: incident.id,
+                    communityId: communityId,
+                  ),
+                ),
+              );
+            }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -316,7 +333,7 @@ class _IncidentCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    if (incident.adminNotes != null && incident.adminNotes!.isNotEmpty)
+                    if (incident.comments.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -328,7 +345,7 @@ class _IncidentCard extends StatelessWidget {
                             Icon(Icons.message, size: 14, color: Colors.blue[700]),
                             const SizedBox(width: 4),
                             Text(
-                              'Tiene respuesta',
+                              '${incident.comments.length} ${incident.comments.length == 1 ? 'comentario' : 'comentarios'}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.blue[700],

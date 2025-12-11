@@ -392,6 +392,11 @@ def seed_complete_data():
     # ========================================
     seed_common_expenses(comm1_id, comm1_data['name'], comm2_id, comm2_data['name'], super_admin_uid)
     
+    # ========================================
+    # 6. CREAR INCIDENTES DE PRUEBA
+    # ========================================
+    seed_incidents(comm1_id, comm1_data['name'])
+    
     print("\n" + "="*60)
     print("🔐 CREDENCIALES:")
     print("\n   👑 SUPER ADMIN:")
@@ -752,6 +757,171 @@ def seed_common_expenses(comm1_id, comm1_name, comm2_id, comm2_name, admin_uid):
     print(f"\n✅ 4 gastos comunes creados (2 por comunidad)")
     print(f"   - Mes pasado: NOTIFICADO (enviado a residentes)")
     print(f"   - Mes actual: CERRADO (listo para notificar)")
+
+def seed_incidents(comm_id, comm_name):
+    """Crea incidentes de prueba para la comunidad Las Condes"""
+    print(f"\n🚨 Creando incidentes de prueba...\n")
+    print(f"📍 {comm_name}:")
+    
+    from datetime import timedelta
+    
+    # Obtener usuarios residentes de esta comunidad
+    users_ref = db.collection('users')
+    users_docs = list(users_ref.stream())
+    
+    # Filtrar residentes de esta comunidad
+    residents = []
+    for user_doc in users_docs:
+        user_data = user_doc.to_dict()
+        memberships = user_data.get('memberships', [])
+        for membership in memberships:
+            if membership.get('community_id') == comm_id and 'resident' in membership.get('roles', []):
+                residents.append({
+                    'uid': user_doc.id,
+                    'name': f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip(),
+                    'unit': membership.get('unit_number', 'N/A')
+                })
+                break
+    
+    if len(residents) < 2:
+        print("   ⚠️  No hay suficientes residentes para crear incidentes")
+        return
+    
+    # Tomar los primeros 2 residentes para crear incidentes
+    resident1 = residents[0]
+    resident2 = residents[1]
+    
+    today = datetime.now()
+    
+    # Incidentes de ejemplo
+    incidents_data = [
+        {
+            'user': resident1,
+            'title': 'Problema con el ascensor del piso 3',
+            'description': 'El ascensor se detiene en el piso 3 y no sube más. Hace ruidos extraños y la puerta no cierra correctamente.',
+            'category': 'instalaciones',
+            'priority': 'alta',
+            'status': 'pendiente',
+            'created_at': today - timedelta(days=2),
+            'comments': []
+        },
+        {
+            'user': resident1,
+            'title': 'Filtración de agua en estacionamiento',
+            'description': 'Hay una filtración de agua en el estacionamiento subterráneo, sector A. El agua está empozándose cerca de los estacionamientos 15-20.',
+            'category': 'instalaciones',
+            'priority': 'alta',
+            'status': 'en_proceso',
+            'created_at': today - timedelta(days=5),
+            'comments': [
+                {
+                    'user_name': 'Admin Sistema',
+                    'user_role': 'admin',
+                    'comment_text': 'Ya contactamos al plomero. Vendrá mañana a revisar.',
+                    'created_at': today - timedelta(days=4)
+                }
+            ]
+        },
+        {
+            'user': resident2,
+            'title': 'Intento de robo en el edificio',
+            'description': 'Anoche alrededor de las 23:00 hrs se vieron personas sospechosas intentando forzar la puerta del acceso peatonal. Las cámaras deberían tener registro.',
+            'category': 'seguridad',
+            'priority': 'critica',
+            'status': 'resuelto',
+            'created_at': today - timedelta(days=3),
+            'comments': [
+                {
+                    'user_name': 'Admin Sistema',
+                    'user_role': 'admin',
+                    'comment_text': 'Se revisaron las cámaras y se hizo la denuncia a Carabineros. Se reforzará la seguridad.',
+                    'created_at': today - timedelta(days=2)
+                },
+                {
+                    'user_name': resident2['name'],
+                    'user_role': 'resident',
+                    'comment_text': 'Gracias por la rápida gestión. ¿Se va a cambiar la cerradura?',
+                    'created_at': today - timedelta(days=1)
+                },
+                {
+                    'user_name': 'Admin Sistema',
+                    'user_role': 'admin',
+                    'comment_text': 'Sí, mañana viene el cerrajero a instalar una nueva cerradura de seguridad.',
+                    'created_at': today - timedelta(hours=12)
+                }
+            ]
+        },
+        {
+            'user': resident2,
+            'title': 'Ruido excesivo en depto 401',
+            'description': 'El departamento 401 está haciendo mucho ruido después de las 22:00 hrs todos los días. Música alta y movimientos de muebles.',
+            'category': 'ruido',
+            'priority': 'media',
+            'status': 'pendiente',
+            'created_at': today - timedelta(days=1),
+            'comments': []
+        }
+    ]
+    
+    # Crear incidentes
+    incidents_ref = db.collection('communities').document(comm_id).collection('incidents')
+    
+    for incident_data in incidents_data:
+        user = incident_data['user']
+        
+        # Preparar documento del incidente
+        incident_doc = {
+            'title': incident_data['title'],
+            'description': incident_data['description'],
+            'category': incident_data['category'],
+            'priority': incident_data['priority'],
+            'status': incident_data['status'],
+            'community_id': comm_id,
+            'created_by': user['uid'],
+            'reported_by_id': user['uid'],
+            'reported_by_name': user['name'],
+            'reported_by_unit': user['unit'],
+            'is_security': incident_data['category'] == 'seguridad',
+            'admin_notes': None,
+            'created_at': incident_data['created_at'],
+            'updated_at': incident_data['created_at'],
+            'resolved_at': incident_data['created_at'] + timedelta(hours=1) if incident_data['status'] == 'resuelto' else None,
+            'resolved_by_id': 'admin-system' if incident_data['status'] == 'resuelto' else None,
+            'resolved_by_name': 'Admin Sistema' if incident_data['status'] == 'resuelto' else None,
+        }
+        
+        # Crear el incidente
+        incident_ref = incidents_ref.document()
+        incident_doc['id'] = incident_ref.id
+        incident_ref.set(incident_doc)
+        
+        # Crear comentarios si existen
+        if incident_data['comments']:
+            comments_ref = incident_ref.collection('comments')
+            for comment_data in incident_data['comments']:
+                comment_doc = {
+                    'user_name': comment_data['user_name'],
+                    'user_role': comment_data['user_role'],
+                    'comment_text': comment_data['comment_text'],
+                    'created_at': comment_data['created_at']
+                }
+                comment_ref = comments_ref.document()
+                comment_doc['id'] = comment_ref.id
+                comment_ref.set(comment_doc)
+        
+        status_emoji = {
+            'pendiente': '⏳',
+            'en_proceso': '🔄',
+            'resuelto': '✅'
+        }.get(incident_data['status'], '❓')
+        
+        comments_count = len(incident_data['comments'])
+        comments_str = f" ({comments_count} comentarios)" if comments_count > 0 else ""
+        
+        print(f"   {status_emoji} {incident_data['title']}{comments_str}")
+        print(f"      Reportado por: {user['name']} (Depto {user['unit']})")
+    
+    print(f"\n✅ {len(incidents_data)} incidentes creados para {comm_name}")
 
 if __name__ == "__main__":
     seed_complete_data()

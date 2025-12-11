@@ -1,21 +1,20 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class IncidentCommentBase(BaseModel):
+class IncidentCommentCreate(BaseModel):
+    """Schema para crear un comentario"""
     comment_text: str
 
-class IncidentCommentCreate(IncidentCommentBase):
-    pass
-
-class IncidentComment(IncidentCommentBase):
-    id: str
-    incident_id: str
-    user_id: str
+class IncidentComment(BaseModel):
+    """Schema completo de un comentario de incidente"""
+    id: Optional[str] = None
+    incident_id: Optional[str] = None  # Opcional porque se infiere del path
+    user_id: Optional[str] = None      # Opcional porque se obtiene del auth
     user_name: str
-    user_role: str  # 'administrator' or 'resident'
-    created_at: datetime = Field(default_factory=datetime.now)
-    is_resolution_comment: bool = False
-
+    user_role: str
+    comment_text: str
+    created_at: datetime
+    
     class Config:
         from_attributes = True
