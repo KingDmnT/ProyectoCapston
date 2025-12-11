@@ -90,15 +90,73 @@ class _MobileHomePageState extends State<MobileHomePage> {
 }
 
 // Tab principal con dashboard
-class _DashboardTab extends StatelessWidget {
+class _DashboardTab extends StatefulWidget {
   const _DashboardTab();
 
   @override
-  Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
-    final user = authService.currentUser;
-    final String nombre = user?.displayName ?? 'Usuario';
+  State<_DashboardTab> createState() => _DashboardTabState();
+}
 
+class _DashboardTabState extends State<_DashboardTab> {
+  final _authService = AuthService();
+  final _notificationService = NotificationService();
+  String _nombre = '';
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUserData() async {
+    final user = _authService.currentUser;
+    if (user != null) {
+      final db = FirebaseFirestore.instance;
+      try {
+        final doc = await db.collection('users').doc(user.uid).get();
+        if (mounted) {
+          setState(() {
+            _nombre = doc.data()?['firstName'] ?? (user.displayName ?? 'Usuario');
+          });
+        }
+      } catch (e) {
+        if (mounted) setState(() => _nombre = user.displayName ?? 'Usuario');
+      }
+    }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final user = _authService.currentUser;
+      if (user == null) return;
+      final db = FirebaseFirestore.instance;
+      final userDoc = await db.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) return;
+      final userData = userDoc.data();
+      final communityId = userData?['community_id'] as String? ?? userData?['communityId'] as String?;
+      if (communityId != null && communityId.isNotEmpty) {
+        final count = await _notificationService.getUnreadCount(communityId: communityId);
+        if (mounted) setState(() => _unreadCount = count);
+      }
+    } catch (e) {
+      print('Error loading unread count: $e');
+    }
+  }
+
+  void _showNotifications(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const _NotificationsModal(),
+    );
+    _loadUnreadCount();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,7 +177,7 @@ class _DashboardTab extends StatelessWidget {
                   radius: 24,
                   backgroundColor: Colors.white,
                   child: Text(
-                    nombre.isNotEmpty ? nombre[0].toUpperCase() : 'U',
+                    _nombre.isNotEmpty ? _nombre[0].toUpperCase() : 'U',
                     style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold
@@ -132,7 +190,7 @@ class _DashboardTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Hola, $nombre",
+                        "Hola, $_nombre",
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
@@ -154,30 +212,31 @@ class _DashboardTab extends StatelessWidget {
                       onPressed: () => _showNotifications(context),
                     ),
                     // Badge con número de notificaciones
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        child: const Text(
-                          '3',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                    if (_unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            '$_unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -297,15 +356,7 @@ class _DashboardTab extends StatelessWidget {
 }
 
 
-// Función para mostrar notificaciones (ahora con datos reales)
-void _showNotifications(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const _NotificationsModal(),
-  );
-}
+
 
 // Modal de notificaciones con datos reales
 class _NotificationsModal extends StatefulWidget {
@@ -457,7 +508,25 @@ class _NotificationsModalState extends State<_NotificationsModal> {
                         separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final notif = _notifications[index];
-                          return Container(
+                          return InkWell(
+                            onTap: () async {
+                              if (!notif.isRead) {
+                                try {
+                                  await _notificationService.markAsRead(
+                                    communityId: _communityId!,
+                                    notificationId: notif.id,
+                                  );
+                                  setState(() {
+                                    if (mounted) {
+                                      _notifications[index] = notif.copyWith(isRead: true);
+                                    }
+                                  });
+                                } catch (e) {
+                                  print('Error marking as read: $e');
+                                }
+                              }
+                            },
+                            child: Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: notif.isRead ? Colors.grey[50] : AppColors.primary.withOpacity(0.05),
@@ -530,6 +599,7 @@ class _NotificationsModalState extends State<_NotificationsModal> {
                                 ),
                               ],
                             ),
+                          ),
                           );
                         },
                       ),
