@@ -6,6 +6,8 @@ import 'package:vecinapp/admin/screens/communities/communities_screen.dart';
 import 'package:vecinapp/admin/screens/users/users_screen.dart';
 import 'package:vecinapp/admin/screens/maintenance/maintenance_screen.dart';
 import 'package:vecinapp/admin/screens/common_expenses/common_expenses_screen.dart';
+import 'package:vecinapp/admin/screens/incidents/incidents_screen.dart';
+import 'package:vecinapp/admin/screens/reservations/reservations_screen.dart';
 
 // Dashboard principal del administrador (backoffice web)
 class AdminDashboardPage extends StatefulWidget {
@@ -23,6 +25,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     const _DashboardView(),
     const CommunitiesScreen(),
     const UsersScreen(),
+    const IncidentsScreen(),
+    const ReservationsScreen(),
     const MaintenanceScreen(),
     const CommonExpensesScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
@@ -32,6 +36,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     "Dashboard General",
     "Gestión de Comunidades",
     "Gestión de Usuarios",
+    "Gestión de Incidentes",
+    "Gestión de Reservas",
     "Gestión de Mantenimientos",
     "Gestión de Gastos Comunes",
     "Gestión de Visitas"
@@ -101,6 +107,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 icon: Icon(Icons.people_outline),
                 selectedIcon: Icon(Icons.people, color: AppColors.primary),
                 label: Text('Usuarios'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.warning_amber_outlined),
+                selectedIcon: Icon(Icons.warning_amber, color: AppColors.primary),
+                label: Text('Incidentes'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.event_available_outlined),
+                selectedIcon: Icon(Icons.event_available, color: AppColors.primary),
+                label: Text('Reservas'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.build_outlined),
