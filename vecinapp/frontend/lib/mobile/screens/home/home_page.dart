@@ -8,6 +8,7 @@ import 'package:vecinapp/core/models/user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vecinapp/core/services/common_expense_service.dart';
 import 'package:vecinapp/mobile/screens/my_expenses_page.dart';
+import 'package:vecinapp/mobile/screens/mis_incidentes_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
@@ -215,9 +216,19 @@ class _DashboardTab extends StatelessWidget {
               children: [
                 _QuickActionButton(
                   icon: Icons.build_circle_outlined,
-                  label: "Incidentes",
+                  label: "Reportar",
                   onTap: () {
                     Navigator.pushNamed(context, '/mobile/incidentes');
+                  },
+                ),
+                _QuickActionButton(
+                  icon: Icons.list_alt,
+                  label: "Mis Incidentes",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MisIncidentesPage()),
+                    );
                   },
                 ),
                 _QuickActionButton(

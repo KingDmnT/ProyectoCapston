@@ -8,6 +8,8 @@ import 'package:vecinapp/admin/screens/common_expenses/common_expenses_screen.da
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:vecinapp/admin/screens/incidents/incidents_screen.dart';
+import 'package:vecinapp/admin/screens/reservations/reservations_screen.dart';
 
 /// Dashboard administrativo con diseño corporativo morado y datos reales
 class AdminDashboardPage extends StatefulWidget {
@@ -84,9 +86,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _DashboardView(communityId: _communityId),
     const CommunitiesScreen(),
     const UsersScreen(),
+    const IncidentsScreen(),
+    const ReservationsScreen(),
     const MaintenanceScreen(),
     const CommonExpensesScreen(),
     const Center(child: Text("Gestión de Visitas (Próximamente)")),
+  ];
+  
+  final List<String> _titles = [
+    "Dashboard General",
+    "Gestión de Comunidades",
+    "Gestión de Usuarios",
+    "Gestión de Incidentes",
+    "Gestión de Reservas",
+    "Gestión de Mantenimientos",
+    "Gestión de Gastos Comunes",
+    "Gestión de Visitas"
   ];
 
   @override
