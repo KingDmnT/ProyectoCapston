@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
+import 'package:vecinapp/core/models/incident.dart';
+import 'package:vecinapp/core/services/incident_service.dart';
+import 'package:vecinapp/core/services/auth_service.dart';
 
 class ReportarIncidentePage extends StatefulWidget {
   final String categoria; // [NUEVO] Recibimos la categoría seleccionada
@@ -15,10 +19,26 @@ class ReportarIncidentePage extends StatefulWidget {
 class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
   final _tituloCtrl = TextEditingController();
   final _descripcionCtrl = TextEditingController();
+  final _incidentService = IncidentService();
+  bool _isLoading = false;
   
-  // Eliminamos la lista _categorias y _categoriaSeleccionada porque ya no se usan
+  // Mapear categoría de texto a enum
+  IncidentCategory _mapCategory(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'instalaciones':
+        return IncidentCategory.instalaciones;
+      case 'seguridad':
+        return IncidentCategory.seguridad;
+      case 'limpieza':
+        return IncidentCategory.limpieza;
+      case 'ruido':
+        return IncidentCategory.ruido;
+      default:
+        return IncidentCategory.otro;
+    }
+  }
 
-  void _enviarReporte() {
+  Future<void> _enviarReporte() async {
     if (_tituloCtrl.text.trim().isEmpty || _descripcionCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Por favor complete todos los campos"), backgroundColor: Colors.orange),
@@ -26,12 +46,66 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
       return;
     }
 
-    // Aquí enviarías: widget.categoria, _tituloCtrl.text, etc.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Reporte enviado con éxito"), backgroundColor: Colors.green),
-    );
-    
-    Navigator.pop(context);
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      
+      if (user == null) {
+        throw Exception("Usuario no autenticado");
+      }
+
+      // Obtener el communityId del usuario
+      final userData = await authService.getCurrentUserData();
+      // Intentar obtener de communityId directo, o del primer membership
+      final communityId = userData?.communityId ?? 
+                         (userData?.memberships.isNotEmpty == true 
+                           ? userData!.memberships[0].communityId 
+                           : '');
+      
+      if (communityId.isEmpty) {
+        throw Exception("No se pudo obtener la comunidad del usuario");
+      }
+
+      final newIncident = Incident(
+        id: '', // Se generará en el backend
+        title: _tituloCtrl.text.trim(),
+        description: _descripcionCtrl.text.trim(),
+        category: _mapCategory(widget.categoria),
+        priority: IncidentPriority.media,
+        status: IncidentStatus.pendiente,
+        communityId: communityId,
+        createdBy: user.uid,
+        createdAt: DateTime.now(),
+      );
+
+      // Crear incidente (notifica automáticamente a los admins)
+      await _incidentService.createIncident(newIncident);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("✅ Incidente reportado. Los administradores han sido notificados."),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al enviar reporte: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -158,14 +232,23 @@ class _ReportarIncidentePageState extends State<ReportarIncidentePage> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _enviarReporte,
+                              onPressed: _isLoading ? null : _enviarReporte,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 2,
                               ),
-                              child: const Text("Enviar Reporte", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text("Enviar Reporte", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],

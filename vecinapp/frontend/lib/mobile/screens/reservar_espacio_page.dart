@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:provider/provider.dart';
 import 'package:vecinapp/core/theme/app_theme.dart';
+import 'package:vecinapp/core/models/reservation.dart' as models;
+import 'package:vecinapp/core/services/reservation_service.dart';
+import 'package:vecinapp/core/services/auth_service.dart';
 
 class ReservarEspacioPage extends StatefulWidget {
   final String nombreEspacio; // Ej: "Quincho"
@@ -18,12 +22,25 @@ class ReservarEspacioPage extends StatefulWidget {
 }
 
 class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
-  // Variables para la fecha y hora
   DateTime _fechaSeleccionada = DateTime.now();
   TimeOfDay _horaInicio = const TimeOfDay(hour: 12, minute: 00);
   TimeOfDay _horaFin = const TimeOfDay(hour: 16, minute: 00);
-  
   final _comentariosCtrl = TextEditingController();
+  final _reservationService = ReservationService();
+  bool _isLoading = false;
+
+  models.SpaceType _mapSpaceType(String espacio) {
+    switch (espacio.toLowerCase()) {
+      case 'quincho':
+        return models.SpaceType.quincho;
+      case 'piscina':
+        return models.SpaceType.piscina;
+      case 'cancha':
+        return models.SpaceType.cancha;
+      default:
+        return models.SpaceType.salon;
+    }
+  }
 
   // Selector de Fecha
   Future<void> _seleccionarFecha(BuildContext context) async {
@@ -71,16 +88,68 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
     }
   }
 
-  void _confirmarReserva() {
-    // Aquí iría la lógica para guardar en Firebase
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("¡Reserva de ${widget.nombreEspacio} confirmada!"),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-    Navigator.pop(context); // Vuelve al menú
+  Future<void> _confirmarReserva() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final user = authService.currentUser;
+      
+      if (user == null) {
+        throw Exception("Usuario no autenticado");
+      }
+
+      final userData = await authService.getCurrentUserData();
+      // Intentar obtener de communityId directo, o del primer membership
+      final communityId = userData?.communityId ?? 
+                         (userData?.memberships.isNotEmpty == true 
+                           ? userData!.memberships[0].communityId 
+                           : '');
+      
+      if (communityId.isEmpty) {
+        throw Exception("No se pudo obtener la comunidad del usuario");
+      }
+
+      final newReservation = models.Reservation(
+        id: '',
+        spaceType: _mapSpaceType(widget.nombreEspacio),
+        date: _fechaSeleccionada,
+        startTime: models.TimeOfDay(hour: _horaInicio.hour, minute: _horaInicio.minute),
+        endTime: models.TimeOfDay(hour: _horaFin.hour, minute: _horaFin.minute),
+        purpose: _comentariosCtrl.text.trim().isEmpty ? 'Evento particular' : _comentariosCtrl.text.trim(),
+        attendees: 10, // Valor por defecto, se puede agregar un campo si se necesita
+        status: models.ReservationStatus.pendiente,
+        communityId: communityId,
+        createdBy: user.uid,
+        createdAt: DateTime.now(),
+      );
+
+      await _reservationService.createReservation(newReservation);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("✅ Reserva de ${widget.nombreEspacio} enviada. Los administradores la revisarán."),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al crear reserva: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -236,14 +305,23 @@ class _ReservarEspacioPageState extends State<ReservarEspacioPage> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _confirmarReserva,
+                              onPressed: _isLoading ? null : _confirmarReserva,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 elevation: 2,
                               ),
-                              child: const Text("Confirmar Reserva", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text("Confirmar Reserva", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],
