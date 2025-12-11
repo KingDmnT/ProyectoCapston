@@ -1,5 +1,6 @@
 import 'package:vecinapp/core/services/api_service.dart';
 import 'package:vecinapp/core/models/incident.dart';
+import 'package:vecinapp/core/models/incident_comment.dart';
 
 class IncidentService {
   final ApiService _apiService = ApiService();
@@ -100,6 +101,27 @@ class IncidentService {
       );
     } catch (e) {
       print('Error al eliminar incidente: $e');
+      rethrow;
+    }
+  }
+
+  /// Agregar comentario
+  Future<IncidentComment> addComment({
+    required String communityId,
+    required String incidentId,
+    required String commentText,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        '/incidents/$incidentId/comments?community_id=$communityId',
+        {
+          'incident_id': incidentId,
+          'comment_text': commentText,
+        },
+      );
+      return IncidentComment.fromJson(response);
+    } catch (e) {
+      print('Error al agregar comentario: $e');
       rethrow;
     }
   }

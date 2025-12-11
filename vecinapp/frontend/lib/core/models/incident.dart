@@ -1,5 +1,7 @@
 // Modelo de incidente para VecinApp
 
+import 'incident_comment.dart';
+
 enum IncidentCategory {
   instalaciones,
   seguridad,
@@ -156,6 +158,16 @@ class Incident {
   final String? adminNotes;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  
+  // Traceability Fields
+  final String? reportedById;
+  final String? reportedByName;
+  final String? reportedByUnit;
+  final DateTime? resolvedAt;
+  final String? resolvedById;
+  final String? resolvedByName;
+  final bool isSecurity;
+  final List<IncidentComment> comments;
 
   Incident({
     required this.id,
@@ -170,6 +182,14 @@ class Incident {
     this.adminNotes,
     this.createdAt,
     this.updatedAt,
+    this.reportedById,
+    this.reportedByName,
+    this.reportedByUnit,
+    this.resolvedAt,
+    this.resolvedById,
+    this.resolvedByName,
+    this.isSecurity = false,
+    this.comments = const [],
   });
 
   bool get isPending => status == IncidentStatus.pendiente;
@@ -212,6 +232,17 @@ class Incident {
       adminNotes: json['admin_notes'],
       createdAt: parseDate(json['created_at']),
       updatedAt: parseDate(json['updated_at']),
+      reportedById: json['reported_by_id'],
+      reportedByName: json['reported_by_name'],
+      reportedByUnit: json['reported_by_unit'],
+      resolvedAt: parseDate(json['resolved_at']),
+      resolvedById: json['resolved_by_id'],
+      resolvedByName: json['resolved_by_name'],
+      isSecurity: json['is_security'] ?? false,
+      comments: (json['comments'] as List<dynamic>?)
+              ?.map((c) => IncidentComment.fromJson(c))
+              .toList() ??
+          [],
     );
   }
 
@@ -229,6 +260,14 @@ class Incident {
       'admin_notes': adminNotes,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'reported_by_id': reportedById,
+      'reported_by_name': reportedByName,
+      'reported_by_unit': reportedByUnit,
+      'resolved_at': resolvedAt?.toIso8601String(),
+      'resolved_by_id': resolvedById,
+      'resolved_by_name': resolvedByName,
+      'is_security': isSecurity,
+      'comments': comments.map((c) => c.toJson()).toList(),
     };
   }
 
@@ -245,6 +284,14 @@ class Incident {
     String? adminNotes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? reportedById,
+    String? reportedByName,
+    String? reportedByUnit,
+    DateTime? resolvedAt,
+    String? resolvedById,
+    String? resolvedByName,
+    bool? isSecurity,
+    List<IncidentComment>? comments,
   }) {
     return Incident(
       id: id ?? this.id,
@@ -259,6 +306,14 @@ class Incident {
       adminNotes: adminNotes ?? this.adminNotes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      reportedById: reportedById ?? this.reportedById,
+      reportedByName: reportedByName ?? this.reportedByName,
+      reportedByUnit: reportedByUnit ?? this.reportedByUnit,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      resolvedById: resolvedById ?? this.resolvedById,
+      resolvedByName: resolvedByName ?? this.resolvedByName,
+      isSecurity: isSecurity ?? this.isSecurity,
+      comments: comments ?? this.comments,
     );
   }
 }

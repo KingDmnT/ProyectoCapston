@@ -20,6 +20,9 @@ class IncidentStatus(str, Enum):
     EN_PROCESO = "en_proceso"
     RESUELTO = "resuelto"
 
+from typing import List
+from .incident_comment import IncidentComment
+
 class IncidentBase(BaseModel):
     title: str
     description: str
@@ -42,6 +45,18 @@ class Incident(IncidentBase):
     admin_notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+    
+    # New Traceability Fields
+    reported_by_id: Optional[str] = None  # User ID of reporter
+    reported_by_name: Optional[str] = None
+    reported_by_unit: Optional[str] = None
+    
+    resolved_at: Optional[datetime] = None
+    resolved_by_id: Optional[str] = None
+    resolved_by_name: Optional[str] = None
+    
+    is_security: bool = False
+    comments: List[IncidentComment] = []
 
     class Config:
         from_attributes = True

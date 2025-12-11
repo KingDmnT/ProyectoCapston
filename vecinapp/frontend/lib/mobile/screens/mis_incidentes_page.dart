@@ -19,6 +19,7 @@ class _MisIncidentesPageState extends State<MisIncidentesPage> {
   List<Incident> _incidents = [];
   bool _isLoading = true;
   String? _error;
+  String _filterType = 'mine'; // 'mine' or 'all'
 
   @override
   void initState() {
@@ -46,9 +47,12 @@ class _MisIncidentesPageState extends State<MisIncidentesPage> {
                            ? userData.memberships[0].communityId 
                            : '');
 
+      // Si el filtro es 'mine', enviamos el ID. Si es 'all', enviamos null.
+      final createdBy = _filterType == 'mine' ? user.uid : null;
+
       final incidents = await _incidentService.getIncidents(
         communityId: communityId,
-        createdBy: user.uid,
+        createdBy: createdBy,
       );
 
       setState(() {
@@ -94,15 +98,55 @@ class _MisIncidentesPageState extends State<MisIncidentesPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
       appBar: AppBar(
-        title: const Text('Mis Incidentes'),
+        title: const Text('Incidentes'),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
+      body: Column(
+        children: [
+          // Filtro Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Colors.white,
+            child: Row(
+              children: [
+                const Text('Ver:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _filterType,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'mine', child: Text('Mis Incidentes')),
+                          DropdownMenuItem(value: 'all', child: Text('Toda la Comunidad')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _filterType = value);
+                            _loadIncidents();
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          Expanded(
+            child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(Icons.error_outline, size: 64, color: Colors.red),
@@ -147,7 +191,10 @@ class _MisIncidentesPageState extends State<MisIncidentesPage> {
                         },
                       ),
                     ),
-    );
+            ),
+          ],
+        ),
+      );
   }
 }
 

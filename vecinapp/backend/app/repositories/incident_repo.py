@@ -4,8 +4,10 @@ from app.schemas.incident import (
     IncidentCreate, 
     IncidentUpdate, 
     Incident, 
-    IncidentStatus
+    IncidentStatus,
+    IncidentCategory
 )
+from app.schemas.incident_comment import IncidentComment, IncidentCommentCreate
 from typing import List, Optional
 from datetime import datetime
 
@@ -17,7 +19,7 @@ class IncidentRepository:
         """Obtiene la colección de incidentes de una comunidad"""
         return self.db.collection('communities').document(community_id).collection('incidents')
     
-    def create(self, incident: IncidentCreate) -> Incident:
+    def create(self, incident: IncidentCreate, user_info: dict) -> Incident:
         """
         Crea un nuevo incidente en Firestore.
         """
@@ -30,9 +32,27 @@ class IncidentRepository:
         incident_data['created_at'] = datetime.now()
         incident_data['updated_at'] = datetime.now()
         
+        # Campos de trazabilidad
+        incident_data['reported_by_id'] = user_info.get('id')
+        incident_data['reported_by_name'] = f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
+        incident_data['reported_by_unit'] = None # Se podría buscar si es necesario
+        
+        # Buscar unidad del usuario si existe en sus memberships
+        memberships = user_info.get('memberships', [])
+        for m in memberships:
+            if m.get('community_id') == incident.community_id and m.get('is_active'):
+                incident_data['reported_by_unit'] = m.get('unit_number')
+                break
+        
+        # Flag de seguridad
+        incident_data['is_security'] = incident.category == IncidentCategory.SEGURIDAD
+        
         # Convertir enums a valores string
         incident_data['category'] = incident.category.value
         incident_data['priority'] = incident.priority.value
+        
+        # Inicializar lista de comentarios vacía (aunque se use subcolección, para el modelo)
+        incident_data['comments'] = []
         
         # Crear documento
         doc_ref = collection.document()
@@ -88,11 +108,13 @@ class IncidentRepository:
         
         return None
     
+        
     def update(
         self, 
         community_id: str, 
         incident_id: str, 
-        incident_update: IncidentUpdate
+        incident_update: IncidentUpdate,
+        user_info: Optional[dict] = None
     ) -> Optional[Incident]:
         """
         Actualiza los datos de un incidente existente.
@@ -109,6 +131,18 @@ class IncidentRepository:
         # Convertir enums si existen
         if incident_update.status:
             update_data['status'] = incident_update.status.value
+            
+            # Si se resuelve, guardar quién y cuándo
+            if incident_update.status == IncidentStatus.RESUELTO:
+                update_data['resolved_at'] = datetime.now()
+                if user_info:
+                    update_data['resolved_by_id'] = user_info.get('id')
+                    update_data['resolved_by_name'] = f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip()
+            # Si se reabre, limpiar datos de resolución
+            elif incident_update.status == IncidentStatus.EN_PROCESO or incident_update.status == IncidentStatus.PENDIENTE:
+                update_data['resolved_at'] = None
+                update_data['resolved_by_id'] = None
+                update_data['resolved_by_name'] = None
         
         # Actualizar en Firestore
         doc_ref.update(update_data)
@@ -127,3 +161,46 @@ class IncidentRepository:
         
         doc_ref.delete()
         return True
+
+    def add_comment(self, community_id: str, incident_id: str, comment: IncidentCommentCreate, user_info: dict) -> IncidentComment:
+        """
+        Agrega un comentario a un incidente.
+        """
+        incident_ref = self._get_collection(community_id).document(incident_id)
+        if not incident_ref.get().exists:
+            raise ValueError("Incidente no encontrado")
+            
+        comments_ref = incident_ref.collection('comments')
+        
+        comment_data = {
+            'incident_id': incident_id,
+            'comment_text': comment.comment_text,
+            'user_id': user_info.get('id'),
+            'user_name': f"{user_info.get('first_name', '')} {user_info.get('last_name', '')}".strip(),
+            'user_role': user_info.get('role', 'resident'),
+            'created_at': datetime.now(),
+            'is_resolution_comment': False # Por defecto
+        }
+        
+        doc_ref = comments_ref.document()
+        comment_data['id'] = doc_ref.id
+        doc_ref.set(comment_data)
+        
+        return IncidentComment(**comment_data)
+
+    def get_comments(self, community_id: str, incident_id: str) -> List[IncidentComment]:
+        """
+        Obtiene los comentarios de un incidente.
+        """
+        incident_ref = self._get_collection(community_id).document(incident_id)
+        comments_ref = incident_ref.collection('comments').order_by('created_at')
+        
+        docs = comments_ref.stream()
+        comments = []
+        
+        for doc in docs:
+            data = doc.to_dict()
+            data['id'] = doc.id
+            comments.append(IncidentComment(**data))
+            
+        return comments

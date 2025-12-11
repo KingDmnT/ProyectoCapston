@@ -133,6 +133,11 @@ class _DashboardTab extends StatelessWidget {
                         style: TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pushNamed(context, '/notificaciones'),
+                  icon: const Icon(Icons.notifications_outlined, color: Colors.white, size: 28),
+                ),
               ],
             ),
           ),
